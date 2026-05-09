@@ -1,0 +1,41 @@
+Tool: task_output
+
+Purpose
+-------
+Read accumulated output for a background task. Forward-compatible stub for
+streaming subprocess output that lands with G3.6.
+
+When to use
+-----------
+- After `task_get` reports `running` or `done`, to pull the worker's logs.
+- During cron-driven runs to inspect the latest cycle's output.
+
+When NOT to use
+---------------
+- For arbitrary file reads — use `read`.
+- For `print()` debugging from a sub-agent — that runs through the parent
+  transcript directly.
+
+Inputs
+------
+- `id` (string, required): Task id whose output to inspect.
+
+Output format
+-------------
+- If the task entry has an `output` field set:
+    [stub] task <id> output:
+    <output>
+- Otherwise:
+    [stub] [task <id> output not yet implemented]
+- Missing id:
+    kind=error, message="task not found: <id>"
+
+Permission
+----------
+`auto`.
+
+Stub status
+-----------
+v0.3 returns a placeholder when no output has been recorded. `task_update`
+can set `output` for testing the round-trip; the real impl streams from the
+worker subprocess via the durable queue.

@@ -1,0 +1,61 @@
+Tool: ask_user_question
+
+Purpose
+-------
+Pose a multiple-choice question to the user and wait for their answer. Used
+when the agent must defer a decision that it cannot make safely on its own
+(scope ambiguity, destructive action, naming choice, etc.).
+
+When to use
+-----------
+- Before a destructive action (overwrite a file with significant content,
+  delete a directory, drop a database) when the user has not explicitly
+  pre-approved it.
+- When two reasonable interpretations of an instruction would produce
+  meaningfully different outputs.
+- When you need a small piece of human input that should not be guessed
+  (project name, package version, target branch).
+
+When NOT to use
+---------------
+- For requests that the agent can answer itself by reading files or running
+  searches.
+- For long-form text input. The schema is multi-choice; if you need
+  free-form input set `allowFreeForm: true`, but prefer structuring as
+  options when possible.
+- To narrate progress. Prefer `todo_write` for that.
+
+Inputs
+------
+- `question` (string, required): The actual question, phrased plainly.
+- `options` (array of strings, required, length 2..8): The choices the user
+  may pick from. Each option must be non-empty.
+- `allowFreeForm` (boolean, optional): If true, the UI lets the user type a
+  free-form answer in addition to picking an option.
+
+Output format (v0.2 stub)
+-------------------------
+Returns `kind: "text"` containing:
+
+  [awaiting user response]
+
+  Q: <question>
+  Options:
+    1. <option 1>
+    2. <option 2>
+    ...
+    (free-form answer also accepted)    ← only when allowFreeForm is true
+
+Stub status (important)
+-----------------------
+v0.2 ships a stub: the tool does not actually wait on the user — it returns
+the rendered question immediately and the orchestration layer is expected to
+intercept the call. v0.3 wires the tool to a real prompt-and-await flow in
+the TUI.
+
+Behavior & guardrails
+---------------------
+- Permission is `auto`.
+- The schema rejects `options` arrays with fewer than 2 or more than 8 items
+  to keep the choice list usable in a TUI.
+- Option strings are echoed verbatim, including any markdown.

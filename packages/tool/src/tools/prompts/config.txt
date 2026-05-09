@@ -1,0 +1,47 @@
+Tool: config
+
+Purpose
+-------
+Read-only snapshot of the resolved OpenSeek runtime config. Useful when
+the model needs to confirm which provider/model it's actually connected
+to before executing a sensitive plan.
+
+When to use
+-----------
+- Verifying provider before kicking off a long / expensive run.
+- Diagnosing why behaviour differs between user environments.
+- Showing the user "here's what your config resolved to".
+
+When NOT to use
+---------------
+- To MUTATE config — there's no setter. Edits must go through the user
+  editing `~/.openseek/config.toml` or `<workspace>/.openseek/config.toml`.
+
+Inputs
+------
+- `workspace` (string, optional): Override the workspace path used for the
+  project overlay. Defaults to `ctx.cwd`.
+
+Output format
+-------------
+  openseek resolved config (read-only):
+    provider: <provider>
+    model:    <model>
+    baseURL:  <url or "(default)">
+    apiKey:   …<last 4 chars of key, or "(unset)">
+
+Permission
+----------
+`auto`.
+
+Implementation status
+---------------------
+Real implementation backed by `loadConfig()` from @openseek/provider.
+Layered precedence: env > project overlay > user config > defaults.
+
+Security
+--------
+- The full apiKey is NEVER returned. Only the last 4 chars are shown
+  (with a leading ellipsis), or `(unset)` if empty.
+- A short key (≤4 chars) shows the entire key prefixed with `…`. Real
+  user keys are well over 4 chars so this is only relevant in tests.

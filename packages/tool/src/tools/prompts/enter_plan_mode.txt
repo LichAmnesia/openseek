@@ -1,0 +1,50 @@
+Tool: enter_plan_mode
+
+Purpose
+-------
+Signal that the agent should switch from Agent (or YOLO) mode into Plan mode.
+In Plan mode, write-capable tools are filtered out — the agent may only read,
+search, and emit plan structure (`todo_write`, `verify_plan_execution`, etc.).
+
+When to use
+-----------
+- The user has asked for a plan rather than immediate execution.
+- The current task is exploratory and the agent should not modify the
+  workspace yet.
+- The agent recognizes that the next action is high-risk and wants explicit
+  approval before proceeding.
+
+When NOT to use
+---------------
+- During a normal, low-risk file edit. Plan mode adds friction.
+- To narrate the plan only — `todo_write` is sufficient if you intend to
+  keep executing.
+
+Inputs
+------
+- `reason` (string, optional): A one-line explanation for why Plan mode is
+  being entered. Surfaced in the transcript and the audit log.
+
+Output format
+-------------
+Returns `kind: "text"` such as:
+
+  [mode-signal] enter_plan_mode acknowledged. reason: <reason>
+
+The actual `ToolMode` flip is performed by the CLI/session layer when it
+sees the `[mode-signal]` marker; this tool only emits the signal so that the
+session loop can react in one place.
+
+Behavior & guardrails
+---------------------
+- Permission is `auto`. The tool is allowed in Agent and YOLO modes; calling
+  it from within Plan mode is a no-op (the session layer ignores the second
+  signal).
+- The tool does not mutate `ctx.mode` directly, because `ToolContext.mode`
+  is read-only. The session layer is the source of truth.
+- No file system writes; safe to call repeatedly.
+
+Pairing
+-------
+- Pair with `exit_plan_mode` to return to Agent mode once planning is done.
+- Pair with `todo_write` to publish the plan's steps before exiting.

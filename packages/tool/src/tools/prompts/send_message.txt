@@ -1,0 +1,44 @@
+Tool: send_message
+
+Purpose
+-------
+Inter-agent messaging — used when one agent in a multi-agent run wants to
+hand off context to another without going through the user.
+
+When to use
+-----------
+- A planner agent forwarding a sub-question to a researcher agent.
+- A reviewer agent posting feedback to the agent that wrote the artifact.
+
+When NOT to use
+---------------
+- To talk to the user — emit a normal assistant message.
+- To pass arguments to a freshly-spawned sub-agent — use `agent_spawn`'s
+  `prompt` field; that's already the initial message.
+
+Inputs
+------
+- `toAgent` (string, required): Recipient agent id or role label.
+- `message` (string, required): Body delivered to the recipient.
+- `threadId` (string, optional): Conversation thread id for grouping.
+
+Output format
+-------------
+  [stub] [message sent → <toAgent> thread=<threadId?>]
+  <truncated summary, ≤ 120 chars>
+
+Permission
+----------
+`auto`.
+
+Stub status
+-----------
+v0.3 does not actually deliver the message. The future bus (G3.6 part of
+the team queue) will route messages between live agents.
+
+Behavior & guardrails
+---------------------
+- Message body is whitespace-collapsed and truncated to 120 chars in the
+  ack to keep transcripts readable.
+- The `toAgent` value is NOT validated — destination resolution happens
+  in the bus once it lands.

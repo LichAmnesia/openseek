@@ -1,0 +1,47 @@
+Tool: suggest_background_pr
+
+Purpose
+-------
+Propose a background pull request for the current diff. Lets the agent
+hand off "ready to ship" work to a separate flow without blocking the
+main session on `gh pr create`.
+
+When to use
+-----------
+- After a clean-cut change set the agent is confident about.
+- When the user explicitly asked for "draft a PR".
+
+When NOT to use
+---------------
+- For dirty / partial changes — finish them first.
+- For interactive PR creation — that's a normal `bash gh pr create`.
+
+Inputs
+------
+- `title` (string, ≤200 chars, required): Short PR title in
+  conventional-commit form.
+- `body` (string, required): PR body / summary.
+- `branch` (string, optional): Branch name; defaults to current branch.
+
+Output format
+-------------
+  [stub] [background PR not yet implemented]
+    title:  <title>
+    branch: <branch or "(current branch)">
+    body:   <first line of body>…
+
+Permission
+----------
+`auto`.
+
+Stub status
+-----------
+v0.3 prints the proposal and stops. The real impl will fork a sub-agent
+that runs `gh pr create` (or equivalent), capturing the resulting URL
+back into the parent transcript.
+
+Behavior & guardrails
+---------------------
+- Does NOT actually push or open a PR in v0.3.
+- The body is summarised to first line for log readability; the full
+  body is kept in the input record for the future impl.

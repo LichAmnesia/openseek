@@ -1,0 +1,40 @@
+Tool: mcp_auth
+
+Purpose
+-------
+Begin authentication flow for an MCP server. Some servers (Gmail,
+Calendar, Drive, Canva) require an OAuth round-trip before any tool calls
+work.
+
+When to use
+-----------
+- Before the first call to a server whose tool calls are returning auth
+  errors.
+- During onboarding when the user is configuring a new MCP server.
+
+When NOT to use
+---------------
+- After auth has succeeded — there's no reason to re-trigger.
+- For servers that use static api keys (those go in the mcp config).
+
+Inputs
+------
+- `server` (string, required): Server label requiring auth.
+
+Output format
+-------------
+  [stub] [mcp_auth: visit https://example.invalid/mcp/<server>/auth (placeholder)]
+
+Permission
+----------
+`auto`.
+
+Stub status
+-----------
+v0.3 returns a placeholder URL. The real impl in @openseek/mcp will mint
+a one-time login URL and surface it to the user via the TUI.
+
+Behavior & guardrails
+---------------------
+- The placeholder URL is intentionally `*.invalid` so it never resolves
+  to a real endpoint by mistake.

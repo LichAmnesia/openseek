@@ -1,0 +1,71 @@
+Tool: write
+
+Purpose
+-------
+Create a new file inside the current workspace and write its full contents.
+By default, refuses to overwrite a file that already exists — pass `force: true`
+to replace an existing file.
+
+When to use
+-----------
+- You are creating a brand-new source file, config, fixture, or document.
+- You are scaffolding a project, generating boilerplate, or recording a snapshot
+  whose path you control.
+- You explicitly want to replace a file's entire contents (and you pass force).
+
+When NOT to use
+---------------
+- To make small, targeted edits inside an existing file. Use `edit` instead. It
+  produces narrower, reviewable diffs and is safer for collaboration.
+- To append to a log or growing file. Read it, recompose, then write with force.
+- To create binary content. Bun.write accepts strings only here.
+
+Inputs
+------
+- `path` (string, required): destination file path. Must resolve inside the
+  workspace. Parent directories are created automatically.
+- `content` (string, required): full file body. No newline is appended for you;
+  include trailing newlines if the file convention expects them.
+- `force` (boolean, optional, default false): when false, the call fails if the
+  target already exists. Set to true only when you intentionally want to clobber.
+
+Output format
+-------------
+On success returns `kind: "diff"` with `before` (empty string for new files),
+`after` (the content you wrote), and `path` (relative-to-cwd). The harness can
+render the diff for human review.
+
+Behavior & guardrails
+---------------------
+- Workspace boundary check: paths that escape the cwd are rejected.
+- Atomicity: this tool issues a single `Bun.write`. If it fails midway the file
+  may be partially written; treat write as best-effort and verify with `read` if
+  necessary.
+- The `force` flag is the only way to overwrite an existing file. The tool does
+  not silently merge or append.
+- A no-op (writing the same content) still updates mtime and reports a diff with
+  identical before/after.
+
+Examples
+--------
+1. Create a new TypeScript module:
+   { "path": "packages/tool/src/foo.ts", "content": "export const FOO = 1;\n" }
+
+2. Replace an existing file you know is safe to overwrite:
+   { "path": "config.json", "content": "{\\n  \\"k\\": 1\\n}\\n", "force": true }
+
+3. Scaffold a fresh test fixture:
+   { "path": "tests/fixtures/sample.txt", "content": "hello\\nworld\\n" }
+
+Edge cases
+----------
+- Writing into a directory that does not exist works — parents are created.
+- Writing to a path that points at an existing directory will fail at the
+  filesystem layer.
+- Empty content is allowed and produces a zero-byte file.
+
+Pairing
+-------
+- Pair with `read` after writing to confirm what landed on disk.
+- Prefer `edit` for in-place patches. Use write only when you own the entire
+  file or are intentionally rewriting it.

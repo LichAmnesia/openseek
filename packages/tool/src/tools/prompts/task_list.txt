@@ -1,0 +1,43 @@
+Tool: task_list
+
+Purpose
+-------
+List background tasks tracked in the session. Optional status filter for
+homing in on `queued` / `running` work.
+
+When to use
+-----------
+- Periodic dashboard prints during long runs.
+- Confirming nothing is left running before a teardown step.
+- Selecting which task to `task_get` next.
+
+When NOT to use
+---------------
+- As a streaming feed — list once, then poll with `task_get` for specific
+  ids.
+
+Inputs
+------
+- `status` ("queued"|"running"|"stopped"|"done"|"error", optional): Filter.
+- `limit` (integer, 1..500, optional, default 100): Max entries returned.
+
+Output format
+-------------
+On hit:
+  [stub] N task(s)
+  <id>  <status>  <truncated prompt>
+  ...
+
+On empty:
+  [stub] no tasks
+
+Sorted by createdAt descending so newest tasks appear first.
+
+Permission
+----------
+`auto`.
+
+Stub status
+-----------
+Reads the same in-memory Map as `task_create` / `task_get`. Process-local.
+G3.6 swaps in the persistent store.

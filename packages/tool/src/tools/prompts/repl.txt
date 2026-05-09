@@ -1,0 +1,55 @@
+Tool: repl
+
+Purpose
+-------
+Evaluate a small JS/TS or Python snippet in a fresh subprocess. Useful for
+quick numeric/string transforms, JSON parsing, regex sanity checks — work
+that would be awkward to express as a shell pipeline.
+
+When to use
+-----------
+- One-off computations: "what is sha256 of this string", "decode this
+  base64", "parse this CSV row".
+- Validating a tricky regex / format spec before pasting it into source.
+- Sanity-checking math that the model might hallucinate.
+
+When NOT to use
+---------------
+- Long-running scripts — use `bash` to invoke a checked-in script.
+- Anything that mutates the workspace — use `write` / `edit` / `apply_patch`
+  with proper review.
+- Untrusted code review (no real sandbox; the snippet still has full host
+  filesystem and network access).
+
+Inputs
+------
+- `language` ("js" | "ts" | "python", default "js"): Source language.
+- `code` (string, required): Code to evaluate.
+- `timeoutMs` (number, optional, default 30000, max 120000): Hard timeout.
+
+Output format
+-------------
+  # repl <language> exit=<code>
+  ## stdout
+  <captured stdout>
+  ## stderr
+  <captured stderr>
+
+Permission
+----------
+`deny-in-plan`. Plan mode is read-only — the REPL can spawn arbitrary
+subprocesses, so it's gated alongside `bash`.
+
+Implementation
+--------------
+- js / ts → `bun -e <code>`. Bun handles both transparently.
+- python → `python3 -c <code>`. Requires python3 on PATH; otherwise the
+  spawn returns a normal error.
+- Subprocess inherits cwd; stdin is closed; stdout/stderr captured.
+- `ctx.abort` cancels in-flight evaluation.
+
+Behavior & guardrails
+---------------------
+- Output is NOT truncated — keep snippets small.
+- The subprocess sees the agent's full environment. Treat it like any
+  other shell exec.

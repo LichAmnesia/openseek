@@ -1,0 +1,42 @@
+Tool: list_mcp_resources
+
+Purpose
+-------
+Enumerate resources published by attached MCP servers — the read side of
+the MCP resource API (distinct from tool calls). Resources are typically
+files, prompts, or datasets the server exposes for reading.
+
+When to use
+-----------
+- Discovery: "what does this server give me access to".
+- Before issuing `read_mcp_resource` so the agent has a valid uri.
+
+When NOT to use
+---------------
+- For built-in workspace files — use `glob` / `read`.
+
+Inputs
+------
+- `server` (string, optional): Server label; omit to list across all
+  attached servers.
+
+Output format
+-------------
+  [stub] [mcp resources for <scope>: [] — @openseek/mcp not yet wired]
+
+`<scope>` is either `server=<label>` or `all servers`.
+
+Permission
+----------
+`auto`.
+
+Stub status
+-----------
+Always returns an empty list with a clear "not yet wired" note. The real
+list is populated by @openseek/mcp.
+
+Behavior & guardrails
+---------------------
+- No network calls in v0.3.
+- The empty-list output is stable so callers can grep for it during
+  bring-up.

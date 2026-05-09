@@ -1,0 +1,57 @@
+Tool: powershell
+
+Purpose
+-------
+Run a PowerShell command on Windows hosts. This is the Win32 sibling of
+`bash` — same shell-out shape, different interpreter. Reach for it when a
+Windows-only API (Windows registry, Win32 services, MSBuild via the dev
+shell) makes posix shell awkward.
+
+When to use
+-----------
+- The host is Windows AND the task needs PowerShell-native commands
+  (`Get-ChildItem`, `Invoke-WebRequest`, `Get-Service`, `Test-Path`).
+- The plan is bootstrapping a Windows-specific dev environment.
+
+When NOT to use
+---------------
+- On macOS / Linux. The tool short-circuits with an unavailability error
+  precisely so the agent surfaces the platform mismatch instead of silently
+  swapping to bash.
+- For cross-platform recipes — use `bash` on POSIX hosts.
+
+Inputs
+------
+- `command` (string, required): Full PowerShell command line.
+- `timeoutMs` (number, optional, default 60000, max 600000): Hard timeout.
+
+Output format
+-------------
+Returns `kind: "text"` with the same shape as `bash`:
+  # exit <code>
+  ## stdout
+  <captured stdout>
+  ## stderr
+  <captured stderr>
+
+On non-Windows hosts returns `kind: "error"` with message
+`powershell unavailable: host platform is <platform>, requires win32`.
+
+Permission
+----------
+`deny-in-plan` — same posture as `bash`. Plans must not silently spawn
+shells.
+
+Behavior & guardrails
+---------------------
+- Spawns `powershell.exe -NoProfile -Command <input>`.
+- Inherits the agent's cwd and `ctx.abort` for cancellation.
+- Times out at `timeoutMs` with SIGTERM; partial output is discarded in
+  favour of an error result so callers don't act on truncated state.
+- Profile is disabled (`-NoProfile`) for determinism — user profile dot-files
+  must not change tool behaviour.
+
+Stub status
+-----------
+Implementation is real on Windows. On macOS/Linux the unavailability error
+is the contract, not a TODO.

@@ -1,0 +1,72 @@
+Tool: grep
+
+Purpose
+-------
+Run a regex search across the workspace using ripgrep (`rg`) as the underlying
+engine. Returns matches in `path:line:text` form. Far faster than reading files
+and grepping in-process.
+
+When to use
+-----------
+- Locate every call site of a function, every usage of an environment variable,
+  every TODO, etc.
+- Find the file that contains a known string or regex pattern.
+- Triage code by symbol name when you don't yet have a path.
+
+When NOT to use
+---------------
+- Look up a file you know exists. Use `glob` or `read`.
+- Read a specific section of a file you've already located. Use `read`.
+- Modify files. grep is read-only.
+
+Inputs
+------
+- `pattern` (string, required): ripgrep-flavored regex.
+- `path` (string, optional): subdirectory or file inside the workspace to scan.
+  Defaults to the workspace cwd.
+- `glob` (string, optional): forwarded as `--glob` to ripgrep, e.g. `*.ts`.
+- `caseInsensitive` (boolean, optional): when true, runs with `-i`.
+- `limit` (integer 1..5000, optional, default 500): cap on matching lines kept.
+  Excess lines are reported as `… N more matches truncated`.
+
+Output format
+-------------
+- `kind: "text"` with one match per line in `path:line:text` form. The header
+  flag is suppressed (`--no-heading`) so each line is self-contained.
+- If ripgrep exits with status 1 (no match) or returns empty stdout, the tool
+  returns `(no matches for /<pattern>/)`.
+- If ripgrep exits with status 2, returns `kind: "error"` with the stderr.
+- If ripgrep is not installed (Bun.spawn throws), returns
+  `kind: "error"` with installation guidance for brew/apt.
+
+Behavior & guardrails
+---------------------
+- Workspace boundary check is performed on `path` before invoking rg.
+- The abort signal in the ToolContext is forwarded to the spawned process; if
+  the agent cancels, ripgrep is killed.
+- Output is text/UTF-8; binary files are skipped by ripgrep defaults.
+- This tool does not invoke a shell — args are passed directly to spawn.
+
+Examples
+--------
+1. Find every TODO across the repo:
+   { "pattern": "TODO" }
+
+2. Look for usages of `Bun.spawn` only in TypeScript files:
+   { "pattern": "Bun\\.spawn", "glob": "*.ts" }
+
+3. Case-insensitive search inside a subtree:
+   { "pattern": "openseek", "path": "packages/tool", "caseInsensitive": true }
+
+Edge cases
+----------
+- Multibyte characters: ripgrep handles UTF-8 by default.
+- Files larger than ripgrep's mmap threshold are read streamingly — still safe.
+- Patterns with shell metacharacters do not need quoting; nothing is interpreted
+  by a shell.
+
+Pairing
+-------
+- Pair with `glob` to narrow the search domain by extension.
+- After grep returns hot paths, use `read` to inspect surrounding context, then
+  `edit` to apply targeted patches.

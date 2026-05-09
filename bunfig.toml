@@ -1,0 +1,19 @@
+# Preload @opentui/solid's bun plugin so:
+#   1. .tsx files are transformed by babel-preset-solid (generate: "universal",
+#      moduleName: "@opentui/solid") instead of bun's default JSX transform,
+#   2. solid-js/dist/server.js (the SSR no-op build that bun's "node" export
+#      condition resolves) gets rewritten to solid-js/dist/solid.js — the real
+#      client build with working reactivity.
+# Without this, mountSolidRoot crashes in createMemo because the SSR stubs
+# don't drive the renderer.
+preload = ["@opentui/solid/preload"]
+
+# `bun test` does NOT inherit top-level `preload` — it has its own
+# resolver. Mirror it so .tsx tests get the babel-preset-solid transform.
+[test]
+preload = ["@opentui/solid/preload"]
+
+# Use bun default cache location (~/.bun/install/cache).
+# Tilde in cache path is NOT expanded — leave unset.
+[install]
+exact = false

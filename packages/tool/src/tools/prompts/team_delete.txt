@@ -1,0 +1,42 @@
+Tool: team_delete
+
+Purpose
+-------
+Remove a team and detach its members. Inverse of `team_create`.
+
+When to use
+-----------
+- Tearing down a finished investigation cluster.
+- Cleaning up before a teardown / shutdown sequence.
+
+When NOT to use
+---------------
+- To stop one running task — use `task_stop`.
+- To pause but keep the roster — there is no pause primitive in v0.3;
+  delete and re-create.
+
+Inputs
+------
+- `id` (string, required): Team id returned by `team_create`.
+
+Output format
+-------------
+  [stub] [team <id> (<name>) deleted]
+
+Missing id:
+  kind=error, message="team not found: <id>"
+
+Permission
+----------
+`auto`.
+
+Stub status
+-----------
+Removes the entry from `teamStore`. Running tasks are NOT cancelled —
+G3.6 will add the cascade so `team_delete` implies `task_stop` for all
+team-owned tasks.
+
+Behavior & guardrails
+---------------------
+- Idempotent semantics are NOT provided: deleting an unknown id returns
+  an error so callers don't silently ignore stale references.

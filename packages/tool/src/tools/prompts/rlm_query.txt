@@ -1,0 +1,46 @@
+Tool: rlm_query
+
+Purpose
+-------
+RLM (Reflective Language Model) parallel sampler — fan out N prompts to
+a cheap reasoning model and aggregate. Patterned after DeepSeek-TUI's
+rlm.rs: 1..16 lightweight workers explore the prompt space and the
+parent picks / merges.
+
+When to use
+-----------
+- Generating many candidate continuations (drafts, hypotheses, fix
+  suggestions) before the parent picks one.
+- Cheap exploratory branching that doesn't justify spinning a full
+  `agent_spawn` per query.
+
+When NOT to use
+---------------
+- For a single prompt — call the model directly via the planner.
+- For deep / agentic sub-tasks that need tools — use `agent_spawn` /
+  `task_create`.
+
+Inputs
+------
+- `queries` (string[], 1..16, required): Parallel prompts to dispatch.
+- `model` (string, optional): Override the worker model id; default is
+  the cheap reasoning model.
+
+Output format
+-------------
+  [stub] [rlm: <N> queries dispatched (model=<model>) — fan-out not yet implemented]
+
+Permission
+----------
+`auto`.
+
+Stub status
+-----------
+v0.3 stub. G3.2 wires the real fan-out: spawn N worker calls in parallel,
+collect responses, return them as a structured aggregate.
+
+Behavior & guardrails
+---------------------
+- The cap of 16 mirrors DeepSeek-TUI's RLM contract; raising it is a
+  design call for G3.2.
+- Each query string must be non-empty (zod-enforced).

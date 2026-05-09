@@ -1,0 +1,49 @@
+Tool: snip
+
+Purpose
+-------
+User-driven local message-range deletion. Mirrors the `snipCompact`
+strategy in @openseek/session/compact: drop the inclusive index range
+[startIdx, endIdx] from a conversation snapshot and return the trimmed
+list.
+
+When to use
+-----------
+- The /snip slash command surface — user says "drop messages 4..7".
+- Emergency context-window pruning where structural compaction is too
+  aggressive but a known stale exchange should be removed.
+
+When NOT to use
+---------------
+- For ratio-based or token-cap compaction — use the auto / reactive
+  strategies (not exposed as tools; they run in the run loop).
+- To delete unrelated messages; this is a single contiguous range.
+
+Inputs
+------
+- `startIdx` (integer, ≥0, required): Inclusive start index.
+- `endIdx` (integer, ≥startIdx, required): Inclusive end index. Must be
+  < messages.length when `messages` is provided.
+- `messages` (array, optional): Pre-snapshot of the conversation. If
+  omitted, the tool returns a "plan" marker — the run loop will apply the
+  splice to the live conversation state.
+
+Output format
+-------------
+With `messages`:
+  [snip applied: dropped <N> message(s); kept <K>]
+Without `messages` (plan only):
+  [snip plan: drop indices [<a>, <b>] — <N> message(s)]
+
+Bad bounds:
+  kind=error, message="snip: invalid range [a, b] for length L"
+
+Permission
+----------
+`auto`.
+
+Implementation status
+---------------------
+Real impl. Mirrors `snipCompact` byte-for-byte: same RangeError contract,
+same fresh-array guarantee. The session-side strategy remains the source
+of truth — see `packages/session/src/compact/snip.ts`.

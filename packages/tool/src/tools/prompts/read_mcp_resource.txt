@@ -1,0 +1,38 @@
+Tool: read_mcp_resource
+
+Purpose
+-------
+Fetch the contents of a resource published by an MCP server. Companion
+to `list_mcp_resources` — first list, then read by uri.
+
+When to use
+-----------
+- Pulling reference material from an MCP-attached knowledge base.
+- Reading server-specific files (e.g. an MCP that exposes Notion pages).
+
+When NOT to use
+---------------
+- For workspace files — use `read`.
+
+Inputs
+------
+- `uri` (string, required): MCP resource uri (`scheme://server/path` form
+  is common, but each server defines its own grammar).
+
+Output format
+-------------
+  [stub] [resource <uri> (mcp not yet wired)]
+
+Permission
+----------
+`auto`.
+
+Stub status
+-----------
+v0.3 returns a placeholder. The real impl in @openseek/mcp will pipe the
+resource bytes back. Large resources will be truncated by the bridge.
+
+Behavior & guardrails
+---------------------
+- The uri is NOT validated against any schema — server-defined grammars
+  vary too widely for static parsing.

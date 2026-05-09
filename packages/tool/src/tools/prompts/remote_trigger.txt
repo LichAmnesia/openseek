@@ -1,0 +1,43 @@
+Tool: remote_trigger
+
+Purpose
+-------
+Fire a remote webhook — typically a CI re-run, deploy hook, or an
+external system that exposes a "kick this job" endpoint.
+
+When to use
+-----------
+- Triggering a downstream pipeline after the agent finishes preparation.
+- Cross-system orchestration where the other side only exposes a webhook.
+
+When NOT to use
+---------------
+- For arbitrary HTTP calls — use `web_fetch` (and a tool that accepts a
+  body once available) when you need to inspect the response.
+- For inter-agent messaging — use `send_message`.
+
+Inputs
+------
+- `url` (string, required, must be http(s)): Webhook target.
+- `payload` (record<string,unknown>, optional): JSON body to POST when the
+  real impl lands.
+
+Output format
+-------------
+  [stub] [remote_trigger ack: url=<url> payload-keys=<keys>]
+
+Permission
+----------
+`auto`.
+
+Stub status
+-----------
+v0.3 does NOT actually issue the network request — the ack is bookkeeping
+only. The real impl will perform a POST with appropriate timeouts and
+return the remote's response code / body summary.
+
+Behavior & guardrails
+---------------------
+- URL is validated by zod (`z.string().url()`).
+- The future impl MUST treat HTTP error codes as tool errors so the
+  planner can react.

@@ -1,0 +1,51 @@
+Tool: discover_skills
+
+Purpose
+-------
+Scan the workspace for installed skills and return their names. A skill
+is any immediate subdirectory of `.openseek/skills/` that contains a
+`SKILL.md` file.
+
+When to use
+-----------
+- At the start of a new task, to see whether a packaged skill applies.
+- Before composing a plan that might overlap with an existing skill.
+
+When NOT to use
+---------------
+- Repeatedly within the same plan — the directory listing is stable; cache
+  the result mentally.
+
+Inputs
+------
+- `root` (string, optional): Directory to scan. Defaults to
+  `<cwd>/.openseek/skills`.
+
+Output format
+-------------
+On hit:
+  N skill(s) in <root>:
+    - <name1>
+    - <name2>
+    ...
+On miss:
+  [no skills found in <root>]
+
+I/O errors:
+  kind=error, message="failed to scan <root>: <reason>"
+
+Permission
+----------
+`auto`.
+
+Implementation status
+---------------------
+Real impl (uses Bun.Glob to list `*/SKILL.md`). It does NOT parse
+metadata — full SKILL.md frontmatter parsing arrives with @openseek/skill.
+
+Behavior & guardrails
+---------------------
+- Names are sorted alphabetically for stability.
+- The scan is shallow (only one level deep — no nested skill catalogs).
+- If the directory does not exist, Bun.Glob returns empty rather than
+  throwing.

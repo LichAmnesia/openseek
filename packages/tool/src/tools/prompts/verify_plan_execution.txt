@@ -1,0 +1,46 @@
+Tool: verify_plan_execution
+
+Purpose
+-------
+Cross-check that each step in a plan has produced an artifact in the run
+transcript. The real impl walks the run history and tool-call ledger;
+the stub pretends every step verified so wiring can be exercised.
+
+When to use
+-----------
+- End of a multi-step run, to certify before user handoff.
+- After a `verify` skill / pickup-style flow when the planner needs a
+  programmatic green-light.
+
+When NOT to use
+---------------
+- Mid-plan — false positives from the stub would mislead the agent.
+
+Inputs
+------
+- `steps` (string[], non-empty, required): Plan step descriptions to
+  cross-check.
+
+Output format
+-------------
+  [stub] all <N> step(s) verified
+    [ok] step 1: <step 1 text>
+    [ok] step 2: <step 2 text>
+    ...
+
+Permission
+----------
+`auto`.
+
+Stub status
+-----------
+v0.3 returns "verified" for every step without inspection. The real impl
+will read the SessionMemory event log and check that each step has at
+least one matching tool call / observation.
+
+Behavior & guardrails
+---------------------
+- Schema enforces non-empty `steps` array.
+- The stub's optimistic verdict is intentionally obvious in the output
+  (`[stub]`, identical `[ok]` per line) so reviewers don't mistake it
+  for real verification.

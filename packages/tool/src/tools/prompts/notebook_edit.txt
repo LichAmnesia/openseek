@@ -1,0 +1,56 @@
+Tool: notebook_edit
+
+Purpose
+-------
+Edit a single cell in a Jupyter `.ipynb` notebook. Replaces the cell's source
+text and optionally changes the cell type. The rest of the notebook structure
+(metadata, nbformat, other cells) is preserved as-is.
+
+When to use
+-----------
+- Updating the contents of one cell — e.g. fixing a function definition,
+  rewriting a markdown explanation, swapping import statements.
+- Switching a cell from `code` to `markdown` (or vice versa) when the
+  context demands it.
+
+When NOT to use
+---------------
+- Wholesale notebook rewrites. Use `write` to replace the file outright.
+- Reading or rendering the notebook — `read` flattens cells into a textual
+  view that is easier to reason about.
+- Inserting or deleting cells. Insertion / deletion are not yet supported in
+  v0.2; coordinate via `read` + `write` for now.
+
+Inputs
+------
+- `path` (string, required): Path to a `.ipynb` file inside the workspace.
+- `cellIndex` (integer, required, ≥ 0): Zero-based index of the cell to edit.
+  Out-of-range indices return an error rather than appending.
+- `newSource` (string, required): The new cell source. The tool stores it as
+  a single string (Jupyter accepts both string and list-of-strings forms).
+- `cellType` (enum, optional): `code` | `markdown` | `raw`. When changing to
+  a non-code type, `outputs` and `execution_count` are dropped because they
+  are only meaningful for code cells.
+
+Output format
+-------------
+On success returns `kind: "diff"` with `before` (original notebook JSON),
+`after` (rewritten JSON, pretty-printed with two-space indent and trailing
+newline), and `path` relative to cwd.
+
+Errors:
+- `not a .ipynb file: <path>` — the path does not end in `.ipynb`.
+- `file not found: <path>` — file does not exist.
+- `invalid notebook JSON: ...` — the file could not be JSON-parsed.
+- `notebook has no 'cells' array` — the file is malformed.
+- `cellIndex N out of range (notebook has M cells)` — index too large.
+
+Behavior & guardrails
+---------------------
+- Permission is `deny-in-plan`.
+- Workspace boundary enforced via `resolveWithinCwd`.
+- The tool does not validate full nbformat conformance; it only mutates the
+  fields it needs to. If you require schema-strict notebooks, run a
+  notebook-format validator separately.
+- The output is pretty-printed (2-space indent) so subsequent diffs are
+  human-readable in PR review tools.

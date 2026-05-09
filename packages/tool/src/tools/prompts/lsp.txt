@@ -1,0 +1,49 @@
+Tool: lsp
+
+Purpose
+-------
+Talk to the workspace's language servers — Definition / References /
+Hover / Diagnostics / Rename. The single LSP front door for the agent.
+
+When to use
+-----------
+- Following a symbol's definition before refactoring.
+- Listing all references prior to a rename.
+- Pulling LSP diagnostics on a freshly-edited file.
+
+When NOT to use
+---------------
+- For text search — use `grep`. LSP is structural; grep is textual.
+- For format-on-save / linting — those run via `bash`-style scripts.
+
+Inputs
+------
+- `op` ("definition" | "references" | "hover" | "diagnostics" | "rename"):
+  LSP operation to perform.
+- `file` (string, required): Workspace-relative path.
+- `line` (integer, ≥0, optional): Zero-based line number.
+- `col` (integer, ≥0, optional): Zero-based column number.
+- `newName` (string, optional): Required for op='rename'.
+
+Output format
+-------------
+  [stub] [lsp <op> at <file>:<line>:<col> newName=<n?> — @openseek/lsp not yet wired]
+
+`rename` without `newName`:
+  kind=error, message="lsp rename requires newName"
+
+Permission
+----------
+`auto`.
+
+Stub status
+-----------
+v0.3 returns a placeholder. G3.4 wires the real LSP bridge in
+@openseek/lsp.
+
+Behavior & guardrails
+---------------------
+- The position fields (line/col) are optional so `op=diagnostics` can
+  fetch file-level diagnostics without a cursor location.
+- The schema does NOT cross-validate `newName` for non-rename ops; the
+  field is silently ignored.

@@ -1,0 +1,62 @@
+Tool: bash
+
+Purpose
+-------
+Execute a single shell command via `/bin/sh -c` inside the workspace's current
+working directory. Captures stdout, stderr, and the exit code, and applies a
+hard timeout so a runaway process cannot block the agent forever.
+
+When to use
+-----------
+- Running build commands (e.g. `bun test`, `cargo check`, `go build`).
+- Running git, package manager, or other CLI tools that do not have a
+  dedicated structured tool.
+- Quick file system inspection that does not warrant a `glob` / `grep` call,
+  such as `ls -la <dir>` or `wc -l <file>`.
+- Invoking project scripts under `scripts/` (e.g. `bash scripts/verify.sh`).
+
+When NOT to use
+---------------
+- To read a file's contents — use `read` (it pages large files cleanly).
+- To search by content — use `grep` (ripgrep) instead of `grep | head`.
+- To list files by pattern — use `glob`.
+- To apply a unified diff — use `apply_patch`.
+- To perform an HTTP fetch — use `web_fetch`.
+- For anything that explicitly requires interactive TTY input.
+
+Inputs
+------
+- `command` (string, required): The full shell command. Pipelines, redirection,
+  and command substitution all work because the command is fed to `/bin/sh -c`.
+- `timeoutMs` (integer, optional): Hard timeout in milliseconds. The default is
+  60000 (60 seconds); the maximum is 600000 (10 minutes). When the timeout
+  fires, the child process is sent SIGTERM and the tool returns an error.
+
+Output format
+-------------
+On success returns `kind: "text"` whose body is structured:
+
+  # exit <code>
+  ## stdout
+  <captured stdout>
+  ## stderr
+  <captured stderr>
+
+The `## stdout` and `## stderr` blocks are omitted when their respective
+streams are empty. A non-zero exit code is still returned as `kind: "text"` —
+the model is responsible for inspecting the exit code in the body.
+
+On failure (spawn error or timeout) returns `kind: "error"` with a descriptive
+message such as `command timed out after 60000ms`.
+
+Behavior & guardrails
+---------------------
+- Permission is `deny-in-plan`: bash is filtered out under Plan mode.
+- The child inherits the agent's `cwd`; relative paths in the command resolve
+  against the workspace root.
+- The agent's `AbortSignal` is forwarded to the spawn; user-side Ctrl+C will
+  cancel the command.
+- Only `SIGTERM` is sent on timeout — never `SIGKILL` blindly. If the process
+  ignores SIGTERM, the agent should escalate manually.
+- The shell binary is hard-coded to `/bin/sh`; PowerShell support is in a
+  separate `powershell` tool (T-08).

@@ -1,0 +1,45 @@
+Tool: mcp
+
+Purpose
+-------
+Invoke a tool exposed by an attached MCP (Model Context Protocol) server.
+MCP is OpenSeek's bridge to third-party tool ecosystems
+(chrome-devtools-mcp, hermes, computer-use, etc.).
+
+When to use
+-----------
+- After confirming via `list_mcp_resources` / external docs that a server
+  exposes the tool you want.
+- When the desired capability is NOT in the built-in tool list and an MCP
+  bridge is available.
+
+When NOT to use
+---------------
+- For built-in tools — use them directly.
+- Without knowing the server's tool schema — call `list_mcp_resources`
+  first.
+
+Inputs
+------
+- `server` (string, required): MCP server label from the user's mcp config.
+- `tool` (string, required): Tool name exposed by that server.
+- `args` (record<string,unknown>, optional): Arguments passed through.
+
+Output format
+-------------
+  [stub] [mcp call: <server>.<tool> args=<comma-separated arg keys>]
+
+Permission
+----------
+`auto` for the v0.3 stub. The real bridge MAY downgrade individual
+server.tool combos to `ask` once permission policies are in place.
+
+Stub status
+-----------
+v0.3 does not actually call any MCP server. Wiring lands with @openseek/mcp
+in a follow-on subagent.
+
+Behavior & guardrails
+---------------------
+- Argument names are echoed for log readability; values are NOT logged
+  (could contain secrets).

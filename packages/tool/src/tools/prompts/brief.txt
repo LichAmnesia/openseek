@@ -1,0 +1,44 @@
+Tool: brief
+
+Purpose
+-------
+Produce an end-of-run brief that summarises what the agent did and what
+it found. The real impl reads from SessionMemory; the v0.3 stub just
+acks the request.
+
+When to use
+-----------
+- At the end of a long run, before user handoff.
+- Before uploading a session summary to the mikan dashboard (planned).
+- During checkpointing to capture progress mid-run.
+
+When NOT to use
+---------------
+- Mid-run for "scratchpad" notes — use a normal assistant message.
+- For per-step summaries — use `todo_write` to track ongoing state.
+
+Inputs
+------
+- `format` ("markdown" | "json" | "plain", default "markdown"): Brief
+  output format.
+- `topic` (string, optional): Focus topic; default summarises the full
+  session.
+
+Output format
+-------------
+  [stub] [brief generation not yet implemented (format=<fmt> topic=<t?>)]
+
+Permission
+----------
+`auto`.
+
+Stub status
+-----------
+The real implementation will read SessionMemory + the run's tool-call
+ledger to generate a structured brief. v0.3 ships only the contract.
+
+Behavior & guardrails
+---------------------
+- No filesystem or network side effects in v0.3.
+- The format is honoured by the real impl; the stub echoes it for
+  transcript clarity.

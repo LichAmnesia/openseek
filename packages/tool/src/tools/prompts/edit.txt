@@ -1,0 +1,73 @@
+Tool: edit
+
+Purpose
+-------
+Replace one specific, exact substring inside an existing file with a new
+substring. The search is literal (no regex), and the substring must occur in the
+file exactly once. This guarantees the edit is unambiguous.
+
+When to use
+-----------
+- You want to make a focused change to an existing file: rename a symbol in a
+  single location, fix a typo, swap a constant, adjust a config value.
+- You have already read the surrounding context and have enough lines to make
+  the `old_string` unique.
+
+When NOT to use
+---------------
+- The substring you want to replace appears more than once. Either expand
+  `old_string` to include unique surrounding context, or perform multiple edit
+  calls each with disambiguating context.
+- The file does not exist. Use `write` instead.
+- You want to overwrite the whole file. Use `write` with force.
+- You want to delete a file. Use a shell command via the bash tool family.
+
+Inputs
+------
+- `path` (string, required): file to edit. Must be inside the workspace and must
+  already exist.
+- `old_string` (string, required): exact text to find. Must occur exactly once.
+- `new_string` (string, required): replacement text. May be empty (deletion).
+
+Output format
+-------------
+On success returns `kind: "diff"` with `before` (full original file contents),
+`after` (full new contents), and `path` (relative-to-cwd). On failure returns
+`kind: "error"` with one of these messages:
+- `file not found: <path>`
+- `old_string not found in <path>`
+- `old_string occurs N times in <path>; provide more context to make it unique`
+- `old_string and new_string are identical; nothing to do`
+
+Behavior & guardrails
+---------------------
+- Whitespace, tabs, and newlines are significant. Copy the snippet exactly,
+  including any leading indentation.
+- The replacement is performed on the literal byte sequence — there is no regex
+  or template interpolation.
+- The full file is rewritten in one Bun.write call.
+- Workspace boundary is enforced.
+
+Examples
+--------
+1. Rename a constant whose declaration line is unique:
+   { "path": "src/config.ts",
+     "old_string": "export const PORT = 3000;",
+     "new_string": "export const PORT = 4000;" }
+
+2. Fix a typo with surrounding context to disambiguate:
+   { "path": "README.md",
+     "old_string": "## Instalation\\n\\nFollow these steps",
+     "new_string": "## Installation\\n\\nFollow these steps" }
+
+3. Delete a deprecated import:
+   { "path": "src/index.ts",
+     "old_string": "import { legacy } from \\"./legacy\\";\\n",
+     "new_string": "" }
+
+Pairing
+-------
+- Always run `read` (or rely on a recently-read snapshot) immediately before
+  edit to be certain the bytes match.
+- For sweeping refactors, prefer many small edit calls or a write after manual
+  reconstruction — never assume the engine de-dupes for you.

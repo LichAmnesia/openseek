@@ -1,0 +1,45 @@
+Tool: schedule_cron
+
+Purpose
+-------
+Bind a task (created via `task_create`) to a cron expression so it
+re-triggers on a schedule. Backbone of the recurring-job pattern.
+
+When to use
+-----------
+- Nightly evals / nightly data refreshes.
+- Periodic health checks that should run independently of a user session.
+
+When NOT to use
+---------------
+- For one-off delayed work — use `sleep` then call directly.
+- For event-driven re-triggers — use `monitor` (G3.7) or `remote_trigger`.
+
+Inputs
+------
+- `cron` (string, required): Standard 5-field cron expression
+  ('m h dom mon dow').
+- `taskId` (string, required): Existing task id to re-fire.
+
+Output format
+-------------
+  [stub] [cron scheduled: id=<cronId> expr='<cron>' task=<taskId>]
+
+Validation:
+- Unknown taskId → kind=error, message="task not found: <id>".
+
+Permission
+----------
+`auto`.
+
+Stub status
+-----------
+Stores the binding in `cronStore` (in-memory Map). The real scheduler
+ships with G3.8.
+
+Behavior & guardrails
+---------------------
+- The cron string is NOT validated server-side in v0.3 — the future
+  scheduler will enforce a strict grammar at registration.
+- Multiple schedules MAY point at the same task; concurrency rules are
+  defined by the future scheduler, not this tool.

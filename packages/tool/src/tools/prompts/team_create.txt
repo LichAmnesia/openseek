@@ -1,0 +1,42 @@
+Tool: team_create
+
+Purpose
+-------
+Define a logical team of sub-agents that share a queue / context. Pairs
+with `team_delete`. Tasks routed to a team's queue can be picked up by
+any of its members.
+
+When to use
+-----------
+- Setting up a multi-agent investigation (e.g. one analyst + one
+  researcher + one writer).
+- Grouping cron-scheduled workers under a single label for monitoring.
+
+When NOT to use
+---------------
+- For one-shot fan-out — use `agent_spawn` directly.
+- For one-shot RLM sampling — use `rlm_query`.
+
+Inputs
+------
+- `name` (string, ≤80 chars, required): Human-readable team name.
+- `members` (string[], default []): Initial roster (agent ids / role tags).
+
+Output format
+-------------
+  [stub] [team created: id=<id> name=<name> members=<count>]
+
+Permission
+----------
+`auto`.
+
+Stub status
+-----------
+Stores the entry in `teamStore` (in-memory Map). G3.6 will wire it to the
+sqlite-backed durable queue and route incoming tasks accordingly.
+
+Behavior & guardrails
+---------------------
+- Member ids are NOT validated against a registry — the v0.3 contract is
+  intentionally optimistic so tests can use placeholder labels.
+- `name` is mandatory but not unique-checked.

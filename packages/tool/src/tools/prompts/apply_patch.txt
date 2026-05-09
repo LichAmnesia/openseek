@@ -1,0 +1,72 @@
+Tool: apply_patch
+
+Purpose
+-------
+Apply a unified diff to one or more existing files inside the workspace. Each
+file block in the patch is matched against the current contents and rewritten
+in-place. If any hunk fails to match, no file is modified — the operation is
+all-or-nothing.
+
+When to use
+-----------
+- You have a sizeable, multi-hunk change in hand and want to apply it
+  atomically rather than issuing many `edit` calls.
+- You are translating a `git diff` produced elsewhere (review tool, paste
+  buffer) into the working tree.
+- You want to coordinate edits across two or more files in one shot.
+
+When NOT to use
+---------------
+- For a single literal substring swap — `edit` is simpler and safer.
+- To create a brand-new file — `write` is cleaner. (apply_patch refuses to
+  apply to a non-existent target.)
+- To touch binary content. Only text patches are supported.
+- For fuzzy/3-way merges. The matcher is exact; if context lines differ even
+  by whitespace, the patch is rejected.
+
+Inputs
+------
+- `patch` (string, required): A unified diff. Each file block must begin with
+  `--- a/<path>` immediately followed by `+++ b/<path>`. Hunks start with
+  `@@ -oldStart[,oldLen] +newStart[,newLen] @@` and contain lines beginning
+  with ` ` (context), `-` (delete), or `+` (insert). Multiple files in one
+  patch are supported.
+
+Output format
+-------------
+Single-file patches return `kind: "diff"` with `before`, `after`, and `path`
+relative to cwd. Multi-file patches return `kind: "text"` with one
+`patched <path>` line per file. Failure returns `kind: "error"` and writes
+nothing.
+
+Error messages you may see
+--------------------------
+- `patch parse error: ...` — the patch text could not be parsed.
+- `file not found: <path>` — the target file does not exist in the workspace.
+- `hunk failure in <path>: context mismatch at line N` — the hunk's context
+  bytes do not match the file. Re-read the file and produce a fresh patch.
+- `path error for <path>: ...` — the resolved path escapes the workspace.
+
+Behavior & guardrails
+---------------------
+- Permission is `deny-in-plan`.
+- Workspace boundary is enforced via `resolveWithinCwd`; absolute or
+  upward-traversing paths in the patch are rejected.
+- All target files are validated and hunks applied in memory first; only after
+  every file passes does the tool write to disk. A failure on file 3 of 5
+  leaves files 1-2 untouched.
+- The parser intentionally ignores `diff --git` / `index ...` headers — only
+  the `--- a/`, `+++ b/`, and `@@` lines drive behavior.
+- No fuzzy matching. Whitespace must match exactly.
+
+Examples
+--------
+1. Rename a function across one file:
+
+   --- a/src/util.ts
+   +++ b/src/util.ts
+   @@ -1,3 +1,3 @@
+   -export function oldName() {
+   +export function newName() {
+      return 42;
+    }

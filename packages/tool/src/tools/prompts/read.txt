@@ -1,0 +1,74 @@
+Tool: read
+
+Purpose
+-------
+Return the textual contents of a file inside the current workspace. Supports plain
+text, source code, configuration, structured data, and Jupyter notebooks (.ipynb).
+For very large files, use the offset/limit parameters to page through content
+instead of loading everything at once.
+
+When to use
+-----------
+- You need to see the actual contents of a file, not just whether it exists.
+- You are about to edit a file and want to confirm the surrounding context.
+- You want to inspect a specific region of a long file (logs, datasets, generated
+  code) without flooding the context window.
+- You want to render an .ipynb notebook as plain text (cells are flattened with
+  `# cell[i] (cell_type)` headers).
+
+When NOT to use
+---------------
+- For binary files (images, audio, archives). Use a dedicated tool or describe
+  metadata via shell commands instead.
+- To list directory contents — use the `glob` tool.
+- To search by content — use the `grep` tool. read+search is wasteful.
+- To execute or evaluate code — only the `bash` family does that.
+
+Inputs
+------
+- `path` (string, required): file path. May be relative to the current cwd or an
+  absolute path that still resolves inside the workspace. Paths that escape the
+  workspace are rejected.
+- `offset` (integer ≥ 0, optional): zero-based line offset of the first line to
+  return. Defaults to 0.
+- `limit` (integer 1..50000, optional): maximum number of lines to return.
+  Defaults to 2000.
+
+Output format
+-------------
+Returns `text` with a header line of the form
+`# <relative-path> — lines <start>-<end> of <total>` followed by lines numbered
+to the right of a 6-column right-aligned line counter and a tab. Lines longer
+than 2000 characters are visually truncated with `…`.
+
+Behavior & guardrails
+---------------------
+- Refuses paths that escape the workspace root (returns an error).
+- Returns `kind:"error"` if the file does not exist.
+- Notebooks (.ipynb) are parsed: source text from each cell is concatenated and
+  presented in order, separated by cell headers. Notebook outputs are not
+  included.
+- Symlinks are followed only if the resolved path stays inside the workspace.
+
+Examples
+--------
+1. Read a small source file:
+   { "path": "packages/tool/src/index.ts" }
+
+2. Page through a long log:
+   { "path": "logs/run.log", "offset": 4000, "limit": 500 }
+
+3. Inspect the second 1000 lines of a notebook:
+   { "path": "notebooks/explore.ipynb", "offset": 1000, "limit": 1000 }
+
+Edge cases
+----------
+- A file with zero lines returns the header alone.
+- offset past the end returns header + empty body.
+- Tabs and carriage returns in lines are preserved verbatim except for visual
+  truncation of extremely long lines.
+
+Pairing
+-------
+- Use `glob` first if you don't yet know the exact path.
+- Pair with `edit` once you've confirmed the unique context to replace.

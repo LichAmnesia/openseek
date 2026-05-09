@@ -1,0 +1,64 @@
+Tool: web_fetch
+
+Purpose
+-------
+Retrieve a remote URL and convert it to text the agent can reason about. HTML
+is reduced to a simple markdown approximation (headings, paragraphs, list
+items, anchor links); other content types are returned verbatim.
+
+When to use
+-----------
+- Reading documentation pages, blog posts, README files hosted on github.io
+  or similar.
+- Retrieving small JSON / plain-text files (e.g. a `package.json` from a
+  remote raw.githubusercontent.com URL).
+- Quickly inspecting a webpage's textual content without spinning up a
+  headless browser.
+
+When NOT to use
+---------------
+- For interactive sessions, JavaScript-driven pages, or auth flows. Use
+  `web_browser` (T-13, v0.4) when it lands.
+- For aggregate web search across multiple pages — use `web_search` first
+  to discover URLs, then `web_fetch` each one.
+- For binary downloads (images, PDFs, archives). The body is read as UTF-8
+  text; non-text bodies will look like garbage.
+
+Inputs
+------
+- `url` (string, required): An absolute http(s) URL.
+- `maxBytes` (integer, optional): Truncate the body after this many bytes.
+  Default 1_000_000, max 5_000_000. The truncation is applied to the raw
+  body before HTML→markdown conversion, so the rendered output may be
+  slightly shorter.
+
+Output format
+-------------
+On success returns `kind: "text"` with this layout:
+
+  # <url>
+  # content-type: <type>
+
+  <converted body>
+
+On HTTP errors returns `kind: "error"` with `fetch returned HTTP <code> ...`
+and on network errors returns `kind: "error"` with `fetch failed: <message>`.
+
+HTML → markdown rules (intentionally simple)
+--------------------------------------------
+- `<script>`, `<style>`, `<nav>`, `<noscript>` blocks are stripped.
+- `<h1>`-`<h6>` map to `#` … `######`.
+- `<a href="...">text</a>` becomes `[text](href)` (or just the href if the
+  anchor has no visible text).
+- `<li>` items become `- text` lines.
+- `<p>` blocks become surrounding newlines + plain text.
+- `<br>` becomes a newline.
+- All remaining tags are stripped; common HTML entities are decoded.
+- Three-or-more consecutive newlines collapse to two.
+
+Behavior & guardrails
+---------------------
+- Permission is `auto`: the tool only issues a single GET, never writes.
+- The agent's `AbortSignal` is forwarded to fetch; cancel propagates.
+- No retry. Transient failures should be retried by the caller if desired.
+- No streaming. The whole body is buffered into memory up to `maxBytes`.

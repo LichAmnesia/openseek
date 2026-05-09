@@ -1,0 +1,41 @@
+Tool: task_update
+
+Purpose
+-------
+Patch fields of an existing task entry: status, output snapshot, or
+metadata. Symmetric companion to `task_create` — every field except `id`
+is optional and merged in place.
+
+When to use
+-----------
+- A worker has progressed and wants to publish its new status.
+- An external observer wants to annotate a task with metadata.
+- Tests need to set `output` on a stubbed task to exercise `task_output`.
+
+When NOT to use
+---------------
+- To create a new task — that is `task_create`.
+- To stop a task with a reason — use `task_stop` for clearer intent.
+
+Inputs
+------
+- `id` (string, required).
+- `status` (enum, optional): Replaces the entry's status.
+- `output` (string, optional): Replaces the entry's output snapshot.
+- `meta` (record<string,string>, optional): Merged into existing meta.
+
+Output format
+-------------
+  [stub] [task <id> updated status=<final>]
+
+Missing id:
+  kind=error, message="task not found: <id>"
+
+Permission
+----------
+`auto`.
+
+Stub status
+-----------
+Mutates the in-memory Map. The mutation IS the contract — once the durable
+store lands the same call writes through to sqlite.

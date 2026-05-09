@@ -1,0 +1,51 @@
+Tool: exit_plan_mode
+
+Purpose
+-------
+Signal that the agent is done planning and is ready to switch back from
+Plan mode to Agent mode. Write-capable tools become available again once the
+session layer applies the mode flip.
+
+When to use
+-----------
+- The plan has been published (typically via `todo_write`) and the user has
+  approved it.
+- The agent is ready to begin execution and needs file write / shell access.
+
+When NOT to use
+---------------
+- While more planning work remains. Stay in Plan mode until the plan is
+  actually finalized.
+- To skip from YOLO mode straight to Agent mode — that transition belongs
+  to the session-layer keybindings, not to this tool.
+
+Inputs
+------
+- `summary` (string, optional): A brief summary of the plan that was
+  produced. Surfaced in the transcript so the user has a final glance at
+  what the agent committed to before execution begins.
+
+Output format
+-------------
+Returns `kind: "text"` such as:
+
+  [mode-signal] exit_plan_mode acknowledged.
+  <summary, if provided>
+
+The CLI/session layer interprets the `[mode-signal]` marker and updates the
+current `ToolMode` accordingly.
+
+Behavior & guardrails
+---------------------
+- Permission is `auto`. Calling it outside Plan mode is a no-op.
+- The tool does not mutate `ctx.mode` directly.
+- Pair with `verify_plan_execution` (T-33) once execution finishes to
+  confirm every plan step was actually performed.
+
+Examples
+--------
+1. Quietly switch back without commentary:
+   { }
+
+2. Close out with a one-line summary the user will see in the transcript:
+   { "summary": "Refactor migrations into 3 patches; tests passing locally." }

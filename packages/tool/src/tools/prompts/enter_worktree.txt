@@ -1,0 +1,45 @@
+Tool: enter_worktree
+
+Purpose
+-------
+Switch the agent into an isolated git worktree so parallel branches don't
+trample each other. Pairs with `exit_worktree`.
+
+When to use
+-----------
+- Before spawning sub-agents that will work on different branches in
+  parallel — each subtree gets its own worktree.
+- Long-running experiments where the parent main checkout must stay
+  clean.
+
+When NOT to use
+---------------
+- For non-git workspaces.
+- For trivial in-place edits — there's overhead in switching trees.
+
+Inputs
+------
+- `branch` (string, required): Branch to check out in the worktree.
+- `path` (string, optional): Explicit worktree path; default
+  `../<branch>` relative to the current checkout.
+
+Output format
+-------------
+  [stub] [worktree at <path> entered (branch=<branch>)]
+
+Permission
+----------
+`auto`.
+
+Stub status
+-----------
+v0.3 returns a marker without actually running `git worktree add`. The
+real impl arrives with G3.5 — it'll run the git command, update
+`ctx.cwd` semantics, and surface git errors (dirty index, branch
+conflicts) as tool errors.
+
+Behavior & guardrails
+---------------------
+- The marker echoes both branch and path so the planner has enough
+  context to issue the matching `exit_worktree`.
+- No filesystem mutation occurs in v0.3.

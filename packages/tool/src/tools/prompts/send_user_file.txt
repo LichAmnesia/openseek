@@ -1,0 +1,48 @@
+Tool: send_user_file
+
+Purpose
+-------
+Surface a workspace file to the user via the TUI/CLI's file-display
+affordance (clickable link, embedded image preview, etc.). Distinct from
+just printing the path — the surface gets a structured marker so the UI
+can render it specially.
+
+When to use
+-----------
+- Pointing the user at a generated report (markdown, PDF).
+- Returning an image artifact (screenshot, diagram).
+- Handing off any output that the user will want to open.
+
+When NOT to use
+---------------
+- For raw text the user should just read inline — emit a normal message.
+- For files outside the workspace — the path validator rejects those.
+
+Inputs
+------
+- `path` (string, required): Workspace-relative path.
+- `caption` (string, optional): Short explanation to show alongside.
+
+Output format
+-------------
+  [stub] [user-file display: <relPath>]
+  <caption?>
+
+Path-escape errors:
+  kind=error, message="path escapes workspace: <input>"
+
+Permission
+----------
+`auto`.
+
+Stub status
+-----------
+The path is fully validated against `ctx.cwd`; the only stub bit is the
+display channel — the TUI does not yet render the marker into a clickable
+affordance.
+
+Behavior & guardrails
+---------------------
+- Uses `resolveWithinCwd` so absolute paths and escapes are rejected.
+- Does NOT verify the file exists — that's the caller's responsibility
+  (typical pattern: `write` or `bash` produced it just before).

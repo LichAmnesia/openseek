@@ -1,0 +1,68 @@
+Tool: glob
+
+Purpose
+-------
+List files inside the workspace that match a glob pattern. Powered by Bun.Glob.
+Use this when you know the shape of the path or extension but not the exact
+location, or when you need to enumerate a project subtree.
+
+When to use
+-----------
+- Find every TypeScript file in a package: `packages/tool/**/*.ts`.
+- Locate a particular config file across the monorepo: `**/biome.json`.
+- Enumerate test fixtures: `tests/fixtures/**/*`.
+- Confirm whether a file exists by name without reading it.
+
+When NOT to use
+---------------
+- Search by content. Use `grep` instead.
+- Read a known path. Use `read`.
+- Walk arbitrary directories outside the workspace. The tool refuses absolute
+  paths and patterns that escape the cwd.
+
+Inputs
+------
+- `pattern` (string, required): glob pattern relative to the cwd. Absolute
+  patterns (starting with `/`) are rejected. Brace expansion, `*`, `**`, `?`,
+  and character classes are supported per the Bun.Glob implementation.
+- `limit` (integer 1..10000, optional, default 1000): cap on the number of
+  matches returned. Useful when scanning large trees.
+
+Output format
+-------------
+- On match: `kind: "text"`, body is one path per line (relative to cwd), sorted
+  lexicographically. The list ends without a trailing newline.
+- On no match: `kind: "text"`, body is `(no matches for <pattern>)`.
+
+Behavior & guardrails
+---------------------
+- `onlyFiles: true` is enforced — directories are not returned.
+- Hidden entries (those starting with `.`) are excluded by default.
+- node_modules and build artifacts are not auto-excluded; include `!` patterns
+  in your call site if needed (Bun.Glob does not support negation directly, so
+  prefer narrowing the prefix instead, e.g. `packages/**/src/*.ts`).
+- Results are sorted to make calls deterministic.
+- A scanning loop short-circuits once `limit` matches are reached.
+
+Examples
+--------
+1. All TS sources in the tool package:
+   { "pattern": "packages/tool/src/**/*.ts" }
+
+2. Find every package.json in the workspace:
+   { "pattern": "packages/*/package.json" }
+
+3. Locate any markdown SPEC files:
+   { "pattern": "**/SPEC*.md", "limit": 50 }
+
+Edge cases
+----------
+- A pattern with no wildcards (`packages/tool/src/index.ts`) acts as an exists
+  check: returns either that single path or `(no matches for ...)`.
+- A pattern matching directories only returns nothing because of `onlyFiles`.
+- Very broad patterns (`**/*`) on huge trees can be slow; use `limit` to cap.
+
+Pairing
+-------
+- Use glob to discover candidates, then `read` the most relevant file.
+- Combine with `grep` when you also care about content.

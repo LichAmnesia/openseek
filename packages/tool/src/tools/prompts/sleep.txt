@@ -1,0 +1,42 @@
+Tool: sleep
+
+Purpose
+-------
+Pause the agent for a fixed number of milliseconds. Most often used as
+back-off between polls (waiting for a build to finish, waiting for a
+deployment to roll out).
+
+When to use
+-----------
+- Polling an external system that hasn't settled yet (CI run, deploy).
+- Spacing out rate-limited API calls.
+
+When NOT to use
+---------------
+- As a substitute for proper event waiting. If the run loop exposes an
+  event (file change, process exit), prefer that.
+- Long sleeps (>60s) — the model should re-plan rather than block.
+
+Inputs
+------
+- `ms` (integer, required, 0..600000): Milliseconds to wait.
+
+Output format
+-------------
+  [slept <elapsed>ms]
+
+If the run is cancelled mid-sleep, returns
+  [slept <elapsed>ms (interrupted by abort)]
+
+Permission
+----------
+`auto`. Sleep has no side effects on the workspace.
+
+Behavior & guardrails
+---------------------
+- Listens to `ctx.abort`. If the run is cancelled, the sleep resolves
+  immediately with an "interrupted" marker so the run loop can unwind.
+- `ms = 0` returns instantly with a `[slept 0ms]` marker (still useful as
+  a yield point in tests).
+- The tool resolves a Promise — it does NOT spin a loop. Implementations
+  should not waste CPU.

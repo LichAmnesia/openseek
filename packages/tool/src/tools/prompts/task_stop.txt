@@ -1,0 +1,42 @@
+Tool: task_stop
+
+Purpose
+-------
+Mark a background task as stopped. The current stub flips an in-memory
+flag; the real impl will SIGTERM the worker subprocess and drain its
+output buffer.
+
+When to use
+-----------
+- The task has produced enough signal and is no longer needed.
+- The user cancelled the parent run and outstanding background work
+  should also unwind.
+- A monitor (G3.7) detected an undesirable condition and is shutting work
+  down.
+
+When NOT to use
+---------------
+- To pause-and-resume — use `task_update { status: "queued" }` instead.
+- To fully delete the entry — there is no `task_delete` yet; stopping is
+  the soft-delete contract.
+
+Inputs
+------
+- `id` (string, required): Task id to stop.
+- `reason` (string, optional): Recorded under `meta.stopReason`.
+
+Output format
+-------------
+  [stub] [task <id> stopped reason=<reason?>]
+
+Missing id:
+  kind=error, message="task not found: <id>"
+
+Permission
+----------
+`auto`.
+
+Stub status
+-----------
+Mutates the in-memory entry only. No worker is running, so no signal is
+sent. G3.6 wires the SIGTERM path.

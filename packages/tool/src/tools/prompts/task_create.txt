@@ -1,0 +1,50 @@
+Tool: task_create
+
+Purpose
+-------
+Enqueue a long-running background task. Tasks are independent of the parent
+session and can be polled via `task_get` / `task_list`, paused via
+`task_stop`, and re-scheduled via `schedule_cron`.
+
+When to use
+-----------
+- A piece of work needs minutes/hours of wall-clock time and the parent
+  doesn't want to keep its session resident.
+- Periodic / cron work that should run even when the user is offline.
+- Coordinating a team of sub-agents (`team_create` → many `task_create`).
+
+When NOT to use
+---------------
+- For inline sub-tasks the parent will await — use `agent_spawn` instead.
+- For trivial one-shot calls — call the tool directly.
+
+Inputs
+------
+- `prompt` (string, required): Task description handed to the worker.
+- `name` (string, optional): Short label shown in `task_list`.
+- `meta` (record<string,string>, optional): Free-form metadata stored
+  alongside the task.
+
+Output format
+-------------
+  [stub] [task created: id=<id> status=queued]
+
+`<id>` is then passed to `task_get` / `task_stop` / `task_update` /
+`schedule_cron`.
+
+Permission
+----------
+`auto`.
+
+Stub status (important)
+-----------------------
+v0.3 stub: stores entries in a process-local Map (see
+`packages/tool/src/state.ts`). Not durable — restarts wipe the queue.
+G3.6 swaps in the sqlite-backed durable store; the contract above is
+forward-compatible.
+
+Behavior & guardrails
+---------------------
+- Always succeeds (no input the schema doesn't reject).
+- Returned `id` is unique per process.
+- `name` is folded into `meta.name` for storage simplicity.

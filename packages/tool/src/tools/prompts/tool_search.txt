@@ -1,0 +1,47 @@
+Tool: tool_search
+
+Purpose
+-------
+Search the agent's tool registry by substring. Helps the model when it
+can't recall the exact tool name — e.g. "I need something to read MCP
+resources" → matches `read_mcp_resource`.
+
+When to use
+-----------
+- Vague tool recall: search by keyword and pick the best match.
+- Exploring the registry during onboarding / dev work.
+
+When NOT to use
+---------------
+- When the tool name is already known — call it directly.
+
+Inputs
+------
+- `query` (string, required): Substring to match against names and
+  descriptions.
+- `limit` (integer, 1..100, optional, default 20): Max matches.
+
+Output format
+-------------
+On hit:
+  N match(es) for '<query>':
+    - <name>: <first 100 chars of description>
+    ...
+On miss:
+  [no tools match '<query>']
+
+Scoring (highest first):
+  - exact name match (100)
+  - prefix match (80)
+  - substring in name (60)
+  - substring in description (30)
+
+Permission
+----------
+`auto`.
+
+Implementation status
+---------------------
+Real implementation. Walks `defaultRegistry().list()` so the matching
+inventory matches the agent's actual capabilities. Module is loaded
+lazily via `import('../index.ts')` to avoid an init-time cycle.

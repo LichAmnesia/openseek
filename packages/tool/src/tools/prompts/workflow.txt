@@ -1,0 +1,41 @@
+Tool: workflow
+
+Purpose
+-------
+Declare a multi-step workflow so the planner / orchestrator can coordinate
+it. Useful when the plan exceeds the natural depth of a single message and
+needs an explicit named structure.
+
+When to use
+-----------
+- Beginning a release-cut, nightly-eval, or other named recurring flow.
+- Naming a complex investigation so subsequent tools (`task_create`,
+  `team_create`) can reference it.
+
+When NOT to use
+---------------
+- For one-shot todos — use `todo_write`.
+- For ad-hoc plans — keep them in the planner message.
+
+Inputs
+------
+- `name` (string, required): Workflow identifier.
+- `steps` (string[], non-empty, required): Ordered step descriptions.
+
+Output format
+-------------
+  [stub] [workflow '<name>' registered with <N> step(s)]
+
+Permission
+----------
+`auto`.
+
+Stub status
+-----------
+v0.3 stores nothing; just acks. Future versions will persist the plan,
+track per-step status, and surface progress to the TUI.
+
+Behavior & guardrails
+---------------------
+- No durability in v0.3 — the workflow exists only as a transcript marker.
+- `name` is not unique-checked.

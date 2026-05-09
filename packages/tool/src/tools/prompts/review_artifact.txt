@@ -1,0 +1,43 @@
+Tool: review_artifact
+
+Purpose
+-------
+Queue an artifact (file, diff, run output) for review by a reviewer agent.
+Decouples production from review so the parent can keep moving.
+
+When to use
+-----------
+- After producing a non-trivial artifact the agent isn't certain about.
+- When the user asked for a review pass before merging changes.
+
+When NOT to use
+---------------
+- For trivial artifacts the parent can self-verify.
+- Without a target file path — there's no inline-text review variant.
+
+Inputs
+------
+- `path` (string, required): Workspace-relative path to the artifact.
+- `rubric` (string, optional): Review criteria for the eventual reviewer.
+
+Output format
+-------------
+  [stub] [artifact <relPath> reviewed rubric='<rubric?>']
+
+Path-escape errors:
+  kind=error, message="path escapes workspace: <input>"
+
+Permission
+----------
+`auto`.
+
+Stub status
+-----------
+v0.3 validates the path and emits a marker; no reviewer is actually
+spawned. The real reviewer pipeline lands later (it'll likely use
+`agent_spawn` under the hood with a curated reviewer prompt).
+
+Behavior & guardrails
+---------------------
+- Uses `resolveWithinCwd` so escapes are rejected at submission time.
+- Does NOT verify the file exists — caller's responsibility.

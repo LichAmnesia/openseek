@@ -1,0 +1,39 @@
+Tool: monitor
+
+Purpose
+-------
+Watch a TCP port, filesystem path, or process id and react when its state
+changes. The real impl (G3.7) emits a stream of events; the v0.3 stub
+records the request and returns immediately so plans can be threaded.
+
+When to use
+-----------
+- Waiting for a dev server to become reachable on a port.
+- Detecting when a build artifact appears on disk.
+- Knowing when a long-lived process exits (so the agent can pivot).
+
+When NOT to use
+---------------
+- For one-shot reachability checks — use `bash` with `curl` / `lsof`.
+- For high-frequency tight polling — use `sleep` between explicit checks.
+
+Inputs
+------
+- `target` ("port"|"file"|"process", required): What kind of resource.
+- `value` (string, required): Concrete target ('8080', './build.log',
+  '54321'). Interpretation depends on `target`.
+- `intervalMs` (integer, 100..60000, optional, default 1000): Polling
+  cadence used by the real impl.
+
+Output format
+-------------
+  [stub] [monitor <target>=<value> interval=<ms>ms not yet implemented]
+
+Permission
+----------
+`auto`.
+
+Stub status
+-----------
+Returns synchronously without watching anything. G3.7 wires real polling
+and event streaming; this contract is the placeholder.

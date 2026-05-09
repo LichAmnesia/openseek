@@ -1,0 +1,50 @@
+# OpenSeek Homebrew tap formula stub (G7.5).
+#
+# Real formula will live at openseek/homebrew-tap/Formula/openseek.rb once
+# v1.1 publishes signed release tarballs to GitHub Releases. Until then,
+# users install via `install/install.sh` or `npm i -g openseek`.
+#
+# Skeleton kept here so contributors can validate the schema offline:
+
+class Openseek < Formula
+  desc "Open-source TUI coding agent — TS/Bun monorepo, 27 providers, 52 tools"
+  homepage "https://openseek.dev"
+  version "1.0.0"
+  license "MIT"
+
+  depends_on "oven-sh/bun/bun"
+
+  on_macos do
+    on_arm do
+      url "https://github.com/openseek/openseek/releases/download/v1.0.0/openseek-darwin-arm64.tar.gz"
+      sha256 "PLACEHOLDER_SHA"
+    end
+    on_intel do
+      url "https://github.com/openseek/openseek/releases/download/v1.0.0/openseek-darwin-x64.tar.gz"
+      sha256 "PLACEHOLDER_SHA"
+    end
+  end
+
+  on_linux do
+    on_arm do
+      url "https://github.com/openseek/openseek/releases/download/v1.0.0/openseek-linux-arm64.tar.gz"
+      sha256 "PLACEHOLDER_SHA"
+    end
+    on_intel do
+      url "https://github.com/openseek/openseek/releases/download/v1.0.0/openseek-linux-x64.tar.gz"
+      sha256 "PLACEHOLDER_SHA"
+    end
+  end
+
+  def install
+    libexec.install Dir["*"]
+    (bin/"openseek").write <<~SH
+      #!/bin/bash
+      exec bun #{libexec}/dist/index.js "$@"
+    SH
+  end
+
+  test do
+    assert_match "openseek", shell_output("#{bin}/openseek --version")
+  end
+end

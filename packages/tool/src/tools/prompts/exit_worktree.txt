@@ -1,0 +1,42 @@
+Tool: exit_worktree
+
+Purpose
+-------
+Leave the active git worktree and return to the parent checkout. Inverse
+of `enter_worktree`.
+
+When to use
+-----------
+- After finishing parallel work in a feature worktree.
+- During teardown when the worktree should be removed entirely.
+
+When NOT to use
+---------------
+- To switch between worktrees — call `exit_worktree` then
+  `enter_worktree` again, don't try to chain.
+
+Inputs
+------
+- `remove` (boolean, default false): When true, also remove the worktree
+  directory (G3.5 will run `git worktree remove`).
+
+Output format
+-------------
+  [stub] [worktree exited]
+  [stub] [worktree exited (worktree directory queued for removal)]
+
+Permission
+----------
+`auto`.
+
+Stub status
+-----------
+v0.3 returns a marker without doing any git work. G3.5 wires the real
+flow.
+
+Behavior & guardrails
+---------------------
+- Calling exit before enter is safe in v0.3 (no state to violate); the
+  real impl will surface a git error if the worktree isn't active.
+- `remove=true` does NOT delete the worktree in v0.3 — the marker just
+  records the intent for the real impl to act on.

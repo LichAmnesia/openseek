@@ -1,0 +1,43 @@
+Tool: synthetic_output
+
+Purpose
+-------
+Echo a literal string back as a tool result. Two main uses: (1) tests that
+need a deterministic tool reply without spinning up a real subprocess /
+network call, (2) injecting a planned scratchpad note into the transcript
+when no other tool fits.
+
+When to use
+-----------
+- Test fixtures that need a known tool output.
+- Debugging the planner's reaction to specific tool results.
+
+When NOT to use
+---------------
+- In production runs as a real "do something" tool — it's a no-op by
+  design.
+- For user-visible output — emit a normal assistant message.
+
+Inputs
+------
+- `content` (string, required): Text to echo back.
+
+Output format
+-------------
+The output is the input `content` verbatim:
+  kind: "text", text: <content>
+
+Permission
+----------
+`auto`.
+
+Implementation status
+---------------------
+Real, trivially. The tool is intentionally minimal — no logging, no
+metadata, no formatting.
+
+Behavior & guardrails
+---------------------
+- No truncation; the caller controls payload size.
+- Empty string is allowed (zod string default permits it) and returns an
+  empty text result.

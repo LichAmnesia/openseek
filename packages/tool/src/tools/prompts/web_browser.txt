@@ -1,0 +1,50 @@
+Tool: web_browser
+
+Purpose
+-------
+Drive a Chromium browser via chrome-devtools-mcp (T-13). Lets the agent
+navigate, click, type, screenshot, and evaluate scripts in a real DOM —
+useful for sites that require JS or interactive flows.
+
+When to use
+-----------
+- Pages that need JS execution to render content (`web_fetch` returns
+  shells of HTML).
+- Multi-step interaction (login → click → form fill → submit).
+- Visual capture (screenshots) for the user.
+
+When NOT to use
+---------------
+- For static HTML / JSON — `web_fetch` is faster and lighter.
+- For repeated bulk scraping — write a dedicated script.
+
+Inputs
+------
+- `op` ("goto" | "click" | "type" | "screenshot" | "evaluate"):
+  Browser operation.
+- `url` (string, required for op="goto").
+- `selector` (string, required for op="click" / op="type").
+- `text` (string, required for op="type").
+- `script` (string, required for op="evaluate").
+
+Output format
+-------------
+  [stub] [web_browser <op> <detail> — chrome-devtools-mcp not yet wired]
+
+Validation errors:
+  kind=error with a message specifying the missing required field.
+
+Permission
+----------
+`auto`. The eventual real impl MAY downgrade `evaluate` to `ask` because
+arbitrary JS execution is sensitive.
+
+Stub status
+-----------
+v0.3 validates the request shape and returns a marker. The real impl
+proxies to chrome-devtools-mcp once @openseek/mcp lands.
+
+Behavior & guardrails
+---------------------
+- Per-op required fields are enforced at call time (the schema makes them
+  optional, the call performs the cross-field check).

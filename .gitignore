@@ -1,0 +1,13 @@
+.DS_Store
+node_modules/
+coverage/
+.tmp/
+dist/
+*.log
+.env
+.env.local
+.openseek/
+.claude/settings.local.json
+# safety net for bun tilde-expansion bug
+~/
+.coverage-report.md

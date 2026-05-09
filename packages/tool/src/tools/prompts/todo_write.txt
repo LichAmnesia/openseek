@@ -1,0 +1,63 @@
+Tool: todo_write
+
+Purpose
+-------
+Maintain an in-session, agent-owned todo list. The agent calls this tool to
+publish (or republish) the current set of pending / in-progress / done items
+so the user can see plan status in the transcript.
+
+When to use
+-----------
+- At the start of a multi-step task: list each step you intend to perform.
+- Whenever a step transitions from `pending` → `in_progress` → `done`.
+- After cancelling or replacing a plan: write the updated list.
+
+When NOT to use
+---------------
+- For free-form notes — the schema only supports `{id, text, status}`.
+- For long-term cross-session memory. SessionMemory (v0.3+) handles that.
+- To ask the user to decide between options — use `ask_user_question`.
+
+Inputs
+------
+- `todos` (array, required): Full replacement list. The current state is the
+  full array passed in; this is not a diff. Each item has:
+  - `id` (string, non-empty): A stable identifier of your choosing. Reuse the
+    same id across calls so the UI can highlight transitions cleanly.
+  - `text` (string, non-empty): Human-readable description of the step.
+  - `status`: `pending` | `in_progress` | `done`.
+
+Output format
+-------------
+Returns `kind: "text"` with one line per todo, formatted as:
+
+  [ ] id: text       (pending)
+  [~] id: text       (in_progress)
+  [x] id: text       (done)
+
+An empty `todos` array returns the literal text `(todo list cleared)`.
+
+Behavior & guardrails (v0.2)
+----------------------------
+- Permission is `auto`.
+- v0.2 does **not** persist the todo list — the call simply echoes the list
+  back so the TUI can render it. v0.3 wires this to SessionMemory and to a
+  dedicated transcript widget.
+- At most one item *should* be `in_progress` at any time; the tool itself
+  does not enforce this, but downstream rendering may flag it.
+
+Examples
+--------
+1. Initial plan with three steps:
+   { "todos": [
+     { "id": "1", "text": "Read failing test", "status": "in_progress" },
+     { "id": "2", "text": "Fix bug",            "status": "pending" },
+     { "id": "3", "text": "Run verify.sh",      "status": "pending" }
+   ] }
+
+2. After step 1 completes, advance:
+   { "todos": [
+     { "id": "1", "text": "Read failing test", "status": "done" },
+     { "id": "2", "text": "Fix bug",            "status": "in_progress" },
+     { "id": "3", "text": "Run verify.sh",      "status": "pending" }
+   ] }

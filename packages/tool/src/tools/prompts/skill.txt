@@ -1,0 +1,44 @@
+Tool: skill
+
+Purpose
+-------
+Invoke an OpenSeek skill — a packaged prompt + tool budget stored under
+`.openseek/skills/<name>/SKILL.md`. Skills encode reusable expertise
+(e.g. "review a Solana program", "deploy CineAi") so the planner doesn't
+re-derive them each run.
+
+When to use
+-----------
+- The current task matches a known skill (use `discover_skills` to find).
+- Recurring playbooks — once codified as a skill, prefer invocation over
+  inline plans.
+
+When NOT to use
+---------------
+- For one-off tasks the planner can handle in-line.
+- Without first scanning available skills — `discover_skills` is cheap.
+
+Inputs
+------
+- `name` (string, required): Skill name from `.openseek/skills/<name>/`.
+- `args` (record<string,unknown>, optional): Arguments forwarded to the
+  skill prompt as variable substitutions.
+
+Output format
+-------------
+  [stub] [skill <name> invoked args=<arg keys>]
+
+Permission
+----------
+`auto`.
+
+Stub status
+-----------
+v0.3 does not load or execute SKILL.md — it only acks the call. The real
+impl ships with @openseek/skill.
+
+Behavior & guardrails
+---------------------
+- Arg names are echoed; values are not (privacy / log-noise).
+- The stub does NOT verify the skill exists; the real impl will return a
+  tool error for unknown skills.

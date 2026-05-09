@@ -1,0 +1,52 @@
+Tool: web_search
+
+Purpose
+-------
+Look up information on the public web by issuing a search query and getting
+back a ranked list of result URLs with short snippets. The tool is the entry
+point to subsequently calling `web_fetch` for any specific result.
+
+When to use
+-----------
+- You need to find documentation, blog posts, issue threads, or release
+  notes that match a topic.
+- You need a current fact whose answer is not in the codebase or in the
+  agent's training data.
+- You want to discover a small handful of candidate URLs to fetch in detail.
+
+When NOT to use
+---------------
+- For high-volume scraping. This tool returns at most 10 results per call.
+- For private / internal-only resources. Use `web_fetch` directly with the
+  appropriate URL or set up a dedicated MCP integration.
+- When you already know the URL — go straight to `web_fetch`.
+
+Inputs
+------
+- `query` (string, required): The search query, in plain English or with
+  search operators understood by the underlying backend.
+- `limit` (integer, optional, 1..10): Maximum number of results to return.
+  Default is 5.
+
+Output format
+-------------
+Returns `kind: "text"` containing:
+- A header line clarifying that v0.2 returns a stub result list.
+- The original query.
+- A numbered list of synthetic results, each with a title, URL, and snippet.
+
+Stub status (important)
+-----------------------
+v0.2 ships a stub: results are synthesized deterministically from the query
+so downstream code can wire up the tool surface and tests. v0.5 (Gate G5.x)
+replaces the stub with a real backend (initially via DuckDuckGo's HTML
+endpoint or an opt-in API). The schema and `kind: "text"` format will not
+change when the real backend lands.
+
+Behavior & guardrails
+---------------------
+- Permission is `auto`. The stub does not issue any network traffic.
+- The query string is URL-encoded into the synthetic links so callers
+  exercising the tool surface can verify their plumbing.
+- Result URLs use the `example.invalid` TLD specifically so that any code
+  that mistakenly tries to follow them fails loudly instead of leaking.

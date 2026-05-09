@@ -1,0 +1,42 @@
+Tool: terminal_capture
+
+Purpose
+-------
+Read the agent's own terminal scrollback / last command output. Useful
+for self-introspection during long runs when the model wants to "look at
+what just happened" without parsing its own transcript.
+
+When to use
+-----------
+- Recovering details of a long `bash` output that scrolled past the
+  context window.
+- Confirming what the user saw in the TUI between two model turns.
+
+When NOT to use
+---------------
+- For workspace files — use `read`.
+- For another process's output — use `bash` with redirection.
+
+Inputs
+------
+- `scope` ("last" | "session", default "last"): Which slice of the buffer.
+- `maxBytes` (integer, 1024..2_000_000, optional, default 200_000): Cap.
+
+Output format
+-------------
+  [stub] [terminal buffer not yet implemented (scope=<scope>)]
+
+Permission
+----------
+`auto`.
+
+Stub status
+-----------
+Returns the placeholder unconditionally. The real impl needs the TUI to
+expose a buffer — landing once @openseek/tui ships its scrollback API.
+
+Behavior & guardrails
+---------------------
+- No filesystem or network side effects.
+- `scope=session` semantics: full conversation buffer; `scope=last`: just
+  the most recent terminal exchange.

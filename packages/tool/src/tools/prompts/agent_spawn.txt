@@ -1,0 +1,56 @@
+Tool: agent_spawn
+
+Purpose
+-------
+Spawn a sub-agent to work on a focused sub-task while the parent agent
+continues executing. Sub-agents are intended for parallelizable work
+(searching across many files, drafting independent test cases, summarizing
+long inputs) where the parent does not need to single-step the child.
+
+When to use
+-----------
+- The parent's plan contains a sub-task that is well-scoped and can run
+  independently for a while.
+- The parent wants to keep the main reasoning thread small while the child
+  does context-heavy work in its own session.
+- The parent is preparing to fan out N similar tasks (each as its own child)
+  rather than serializing them.
+
+When NOT to use
+---------------
+- For trivial steps the parent can complete itself in one or two tool calls.
+- When the child would need user interaction — sub-agents inherit the
+  parent's permission posture, not a fresh approval gate.
+- For RLM-style 1-16-way parallel cheap-model sampling. Use `rlm_query`
+  (T-52) instead, which is purpose-built for that.
+
+Inputs
+------
+- `prompt` (string, required): The task description handed to the sub-agent
+  as its initial user message.
+- `name` (string, optional, ≤ 80 chars): Short label that appears in the
+  transcript and in any progress UI.
+- `model` (string, optional): Override the model id for the child (e.g.
+  `deepseek-v4-flash` for cheap children, `deepseek-v4-reasoner` for
+  expensive ones). Defaults to the parent's current model.
+
+Output format (v0.2 stub)
+-------------------------
+Returns `kind: "text"` formatted as:
+
+  [sub-agent spawned: <name> model=<model>]
+  <truncated prompt summary, ≤ 120 chars>
+
+Stub status (important)
+-----------------------
+v0.2 ships a stub: no real child session is started; the tool merely
+acknowledges the spawn request and surfaces the prompt summary so wiring
+can be tested. v0.3 (Gate G3.3) replaces the stub with a real fork that
+streams the child's transcript back to the parent.
+
+Behavior & guardrails
+---------------------
+- Permission is `auto`.
+- The prompt summary is whitespace-collapsed and truncated to 120 chars
+  with a trailing ellipsis when needed.
+- No file system or network side effects in v0.2.

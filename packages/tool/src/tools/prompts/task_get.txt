@@ -1,0 +1,45 @@
+Tool: task_get
+
+Purpose
+-------
+Fetch the current state of a previously-created background task. Pair with
+`task_create` and `task_list` for status checks.
+
+When to use
+-----------
+- Verifying that a task has progressed past `queued`.
+- Retrieving the latest output snapshot (when set) before deciding whether
+  to wait, stop, or re-queue.
+
+When NOT to use
+---------------
+- For high-frequency polling — combine with `sleep` to back off, or
+  `monitor` once it's wired (G3.7).
+- For tail-style streaming output — use `task_output` (also stubbed).
+
+Inputs
+------
+- `id` (string, required): The id returned by `task_create`.
+
+Output format
+-------------
+On hit:
+  [stub] task <id>
+    status: queued|running|stopped|done|error
+    prompt: <truncated to 200 chars>
+    createdAt: <ISO 8601>
+    updatedAt: <ISO 8601>
+    meta: {...}        (if non-empty)
+    output: <string>   (if set)
+
+On miss:
+  kind=error, message="task not found: <id>"
+
+Permission
+----------
+`auto`.
+
+Stub status
+-----------
+Reads the same in-memory Map written by `task_create`. Disappears across
+process restarts. Real impl arrives with G3.6 sqlite store.
