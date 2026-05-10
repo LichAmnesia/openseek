@@ -1,6 +1,6 @@
 {
   "name": "openseek",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Open-source TUI coding agent — TypeScript / Bun monorepo with multi-provider routing, MCP, LSP, and Plan/Agent/YOLO modes.",
   "license": "MIT",
   "repository": {

@@ -1,23 +1,34 @@
-#!/bin/sh
-# Root launcher for `openseek`.
-#
-# Why a sh wrapper instead of `#!/usr/bin/env bun`:
-# we must invoke bun with `--conditions=browser` so solid-js resolves to its
-# universal build (`./dist/solid.js`) instead of the SSR build
-# (`./dist/server.js` — bun's default `node` exports condition).
-# The SSR build's createMemo is a stub and crashes inside @opentui/solid.
-# solid-js is `external` in the published bundle, so this resolution happens
-# at runtime on the user's machine and the build-time plugin can't help.
+#!/usr/bin/env bun
+// Root launcher for `openseek`.
+//
+// We must run the entry under `bun --conditions=browser` so solid-js
+// resolves to its universal build (`./dist/solid.js`) instead of the SSR
+// build (`./dist/server.js`, bun's default `node` exports condition).
+// The SSR build's createMemo is a stub and crashes inside @opentui/solid.
+// solid-js is external in our published bundle, so this resolution
+// happens at runtime on the user's machine and the build-time plugin
+// can't help.
+//
+// Implementation: this shim runs once under bun (without --conditions),
+// uses bun's import.meta.url symlink resolution to find dist/index.js,
+// then spawnSyncs bun a second time with `--conditions=browser` pointed
+// at that entry. Doing it in JS rather than a sh wrapper avoids the
+// symlink-resolution gap on macOS (`cd $(dirname $0) && pwd` returns the
+// symlink dir, not the real install dir, so dist/ would not be found).
 
-set -e
-HERE=$(cd "$(dirname "$0")" && pwd)
-DIST_ENTRY="$HERE/../dist/index.js"
-SRC_ENTRY="$HERE/../packages/cli/src/index.ts"
+import { existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+import { spawnSync } from "node:child_process";
 
-if [ -f "$DIST_ENTRY" ]; then
-  ENTRY="$DIST_ENTRY"
-else
-  ENTRY="$SRC_ENTRY"
-fi
+const here = dirname(fileURLToPath(import.meta.url));
+const distEntry = join(here, "..", "dist", "index.js");
+const srcEntry = join(here, "..", "packages", "cli", "src", "index.ts");
+const target = existsSync(distEntry) ? distEntry : srcEntry;
 
-exec bun --conditions=browser "$ENTRY" "$@"
+const result = spawnSync(
+  process.execPath,
+  ["--conditions=browser", target, ...process.argv.slice(2)],
+  { stdio: "inherit" },
+);
+process.exit(result.status ?? 1);
