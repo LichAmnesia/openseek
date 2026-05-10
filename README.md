@@ -1,5 +1,7 @@
 # OpenSeek
 
+> 中文: [README-zh.md](./README-zh.md)
+
 Open-source TUI coding agent — a TypeScript / Bun monorepo.
 
 Lightweight terminal coding companion with multi-provider routing
@@ -9,38 +11,56 @@ and a headless HTTP/SSE runtime API.
 
 ## Requirements
 
-- [Bun](https://bun.sh) ≥ 1.3
 - macOS or Linux (Windows: use WSL2)
+- [Bun](https://bun.sh) ≥ 1.3 — **required at runtime, not optional.** The
+  codebase uses `Bun.spawn` / `Bun.serve` / `Bun.file`; node alone cannot run
+  it. Even if you install via `npm i -g`, the `openseek` command shells out
+  to `bun` at startup and will fail with `env: bun: No such file or directory`
+  if bun is not on your PATH.
 
-Install Bun if you don't have it:
+## Install
+
+### Step 1 — install bun (skip if already installed)
 
 ```bash
-brew install oven-sh/bun/bun       # macOS (Homebrew)
 curl -fsSL https://bun.sh/install | bash   # any Unix
+brew install oven-sh/bun/bun               # macOS (Homebrew)
 ```
 
-## Quickstart (from source)
+Verify: `bun --version` should print ≥ `1.3.0`.
+
+### Step 2 — install openseek
+
+Pick one. All three put `openseek` on your PATH.
 
 ```bash
+# A. npm
+npm install -g openseek
+
+# B. bun (same registry as A, smoother if you already use bun)
+bun add -g openseek
+
+# C. From source (recommended while iterating)
 git clone https://github.com/<your-handle>/openseek.git
 cd openseek
 bun install
-bun run dev          # launch the TUI
+bun run build
+ln -sf "$PWD/bin/openseek" ~/.local/bin/openseek
 ```
 
-That's it — `bun run dev` boots the CLI directly from TypeScript sources via
-Bun, no build step needed for development.
-
-## Build a launcher
-
-To install the `openseek` command on your PATH:
+### Step 3 — run
 
 ```bash
-bun run build                                    # produces ./bin/openseek
-ln -sf "$PWD/bin/openseek" ~/.local/bin/openseek # symlink onto PATH
-openseek                                         # start the TUI
-openseek doctor                                  # health check
-openseek serve --http                            # headless HTTP/SSE on :7117
+openseek               # start the TUI
+openseek doctor        # health check
+openseek serve --http  # headless HTTP/SSE on :7117
+```
+
+## Develop
+
+```bash
+bun install
+bun run dev          # boots the CLI directly from TypeScript sources, no build needed
 ```
 
 ## Verify
@@ -77,14 +97,6 @@ openseek/
 ├── bin/openseek      executable shim
 └── package.json      bun workspaces root
 ```
-
-## Inspiration (read-only references, not forks)
-
-- [opencode](https://github.com/sst/opencode) — provider abstraction + Solid TUI pattern
-- DeepSeek-TUI — RLM parallel sub-models + cache-aware compaction
-- Claude Code — tool & slash-command design space
-
-All code is independently authored.
 
 ## License
 

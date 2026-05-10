@@ -3,9 +3,8 @@ Tool: rlm_query
 Purpose
 -------
 RLM (Reflective Language Model) parallel sampler — fan out N prompts to
-a cheap reasoning model and aggregate. Patterned after DeepSeek-TUI's
-rlm.rs: 1..16 lightweight workers explore the prompt space and the
-parent picks / merges.
+a cheap reasoning model and aggregate. 1..16 lightweight workers explore
+the prompt space and the parent picks / merges.
 
 When to use
 -----------
@@ -41,6 +40,5 @@ collect responses, return them as a structured aggregate.
 
 Behavior & guardrails
 ---------------------
-- The cap of 16 mirrors DeepSeek-TUI's RLM contract; raising it is a
-  design call for G3.2.
+- The cap of 16 is a fixed contract; raising it is a design call for G3.2.
 - Each query string must be non-empty (zod-enforced).

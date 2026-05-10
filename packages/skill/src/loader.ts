@@ -2,8 +2,8 @@
 // Priority (highest → lowest):
 //   1. <cwd>/.openseek/skills          — workspace-pinned
 //   2. <cwd>/.agents/skills            — agent platform shared
-//   3. <cwd>/.opencode/skills          — opencode compat
-//   4. <cwd>/.claude/skills            — Claude Code compat
+//   3. <cwd>/.opencode/skills          — third-party skill dir
+//   4. <cwd>/.claude/skills            — third-party skill dir
 //   5. ~/.openseek/skills              — global per-user
 // On collision (same skill name) the higher-priority directory wins.
 

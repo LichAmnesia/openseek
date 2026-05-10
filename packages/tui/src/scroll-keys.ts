@@ -68,10 +68,10 @@ export function freshMaxScrollTop(sb: ScrollBoxRenderable): number {
 }
 
 /**
- * Re-engage sticky-bottom + jump to fresh max. Equivalent to CCB's
- * `scrollToBottom()` helper. Safe to call regardless of prior manual-scroll
- * state — `applyStickyStart` clears `_hasManualScroll` via its
- * `_isApplyingStickyScroll` guard + the subsequent `updateStickyState` pass.
+ * Re-engage sticky-bottom + jump to fresh max. Safe to call regardless of
+ * prior manual-scroll state — `applyStickyStart` clears `_hasManualScroll`
+ * via its `_isApplyingStickyScroll` guard + the subsequent
+ * `updateStickyState` pass.
  *
  * We also explicitly write `scrollTop = freshMax` AFTER applyStickyStart, in
  * case `verticalScrollBar.scrollSize` is stale (R5 race) — applyStickyStart
