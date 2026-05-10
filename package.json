@@ -1,11 +1,27 @@
 {
   "name": "openseek",
   "version": "0.0.1",
-  "private": true,
+  "description": "Open-source TUI coding agent — TypeScript / Bun monorepo with multi-provider routing, MCP, LSP, and Plan/Agent/YOLO modes.",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LichAmnesia/openseek.git"
+  },
+  "homepage": "https://github.com/LichAmnesia/openseek",
+  "bugs": {
+    "url": "https://github.com/LichAmnesia/openseek/issues"
+  },
   "type": "module",
   "packageManager": "bun@1.3.13",
   "workspaces": [
     "packages/*"
+  ],
+  "files": [
+    "bin",
+    "dist",
+    "LICENSE",
+    "README.md",
+    "README-zh.md"
   ],
   "scripts": {
     "dev": "bun run packages/cli/src/index.ts",
@@ -14,7 +30,8 @@
     "lint": "bash scripts/lint.sh",
     "typecheck": "bash scripts/typecheck.sh",
     "test": "bash scripts/test.sh",
-    "verify": "bash scripts/verify.sh"
+    "verify": "bash scripts/verify.sh",
+    "prepublishOnly": "bun run build"
   },
   "engines": {
     "bun": ">=1.3.0"

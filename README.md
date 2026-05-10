@@ -41,7 +41,7 @@ npm install -g openseek
 bun add -g openseek
 
 # C. From source (recommended while iterating)
-git clone https://github.com/<your-handle>/openseek.git
+git clone https://github.com/LichAmnesia/openseek.git
 cd openseek
 bun install
 bun run build

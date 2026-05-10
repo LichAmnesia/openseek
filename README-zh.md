@@ -39,7 +39,7 @@ npm install -g openseek
 bun add -g openseek
 
 # C. 源码 (开发 / 想看源码时推荐)
-git clone https://github.com/<your-handle>/openseek.git
+git clone https://github.com/LichAmnesia/openseek.git
 cd openseek
 bun install
 bun run build
