@@ -1,4 +1,4 @@
-# OpenSeek
+# OpenSeek - 广度求索
 
 开源 TUI 编码代理 — TypeScript / Bun monorepo。
 
@@ -7,6 +7,7 @@ Bedrock / Vertex / Azure)、50+ 工具、100+ slash 命令、Plan / Agent / YOLO
 三种模式、MCP client、LSP 反馈, 以及无头 HTTP/SSE Runtime API。
 
 > English: [README.md](./README.md)
+> 官网: https://openseek.dev/
 
 ## 环境要求
 

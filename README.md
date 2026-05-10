@@ -1,6 +1,7 @@
-# OpenSeek
+# OpenSeek - 广度求索
 
 > 中文: [README-zh.md](./README-zh.md)
+> Website: https://openseek.dev/
 
 Open-source TUI coding agent — a TypeScript / Bun monorepo.
 
