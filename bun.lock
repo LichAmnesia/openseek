@@ -17,6 +17,7 @@
         "ai": "^6.0.175",
         "hono": "^4.12.16",
         "solid-js": "^1.9.12",
+        "web-tree-sitter": "0.25.10",
         "zod": "^4.4.3",
       },
       "devDependencies": {
@@ -32,6 +33,14 @@
     "packages/cli": {
       "name": "@openseek/cli",
       "version": "0.0.1",
+      "dependencies": {
+        "@openseek/command": "workspace:*",
+        "@openseek/provider": "workspace:*",
+        "@openseek/server": "workspace:*",
+        "@openseek/session": "workspace:*",
+        "@openseek/tool": "workspace:*",
+        "@openseek/tui": "workspace:*",
+      },
     },
     "packages/command": {
       "name": "@openseek/command",
@@ -64,6 +73,10 @@
     "packages/server": {
       "name": "@openseek/server",
       "version": "0.0.1",
+      "dependencies": {
+        "@openseek/tool": "workspace:*",
+        "hono": "^4.12.16",
+      },
     },
     "packages/session": {
       "name": "@openseek/session",

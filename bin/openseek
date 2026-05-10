@@ -1,27 +1,23 @@
-#!/usr/bin/env bun
-// Root launcher for `openseek` (G7.5).
-//
-// Wraps the built bundle (`dist/index.js`) when present, otherwise falls
-// back to running the workspace TS source directly. The intent is that
-// `npm i -g openseek` / `bun link` / Brewfile / install.sh all install a
-// shim that points here, and a single fallback path keeps dev runs
-// (`./bin/openseek`) honest.
-//
-// Note: we *call* runOpenseek directly rather than relying on the cli's
-// `import.meta.main` guard — that guard is `false` under dynamic import,
-// so the imported module would otherwise be a no-op.
+#!/bin/sh
+# Root launcher for `openseek`.
+#
+# Why a sh wrapper instead of `#!/usr/bin/env bun`:
+# we must invoke bun with `--conditions=browser` so solid-js resolves to its
+# universal build (`./dist/solid.js`) instead of the SSR build
+# (`./dist/server.js` — bun's default `node` exports condition).
+# The SSR build's createMemo is a stub and crashes inside @opentui/solid.
+# solid-js is `external` in the published bundle, so this resolution happens
+# at runtime on the user's machine and the build-time plugin can't help.
 
-import { existsSync } from "node:fs";
-import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
+set -e
+HERE=$(cd "$(dirname "$0")" && pwd)
+DIST_ENTRY="$HERE/../dist/index.js"
+SRC_ENTRY="$HERE/../packages/cli/src/index.ts"
 
-const here = dirname(fileURLToPath(import.meta.url));
-const distEntry = join(here, "..", "dist", "index.js");
-const srcEntry = join(here, "..", "packages", "cli", "src", "index.ts");
+if [ -f "$DIST_ENTRY" ]; then
+  ENTRY="$DIST_ENTRY"
+else
+  ENTRY="$SRC_ENTRY"
+fi
 
-const target = existsSync(distEntry) ? distEntry : srcEntry;
-const mod = (await import(target)) as {
-  runOpenseek: (argv: string[]) => Promise<{ exitCode: number }>;
-};
-const result = await mod.runOpenseek(process.argv.slice(2));
-process.exit(result.exitCode);
+exec bun --conditions=browser "$ENTRY" "$@"

@@ -1,23 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Harness skeleton lint
+# Repo skeleton lint
 required=(
-  "AGENTS.md"
-  "CLAUDE.md"
-  "SPEC.md"
-  "GOAL_DRIVEN.md"
-  "docs/INDEX.md"
-  "docs/ARCHITECTURE.md"
-  "docs/RUNBOOK.md"
-  "docs/TESTING.md"
-  "progress/progress.md"
-  "progress/features.json"
+  "README.md"
+  "LICENSE"
   "scripts/scaffold-packages.sh"
-  ".claude/skills/repo-map/SKILL.md"
-  ".claude/skills/verify/SKILL.md"
-  ".claude/skills/pickup/SKILL.md"
-  ".claude/skills/handoff/SKILL.md"
 )
 
 for file in "${required[@]}"; do
