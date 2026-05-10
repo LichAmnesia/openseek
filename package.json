@@ -2,7 +2,7 @@
   "name": "openseek",
   "version": "0.0.1",
   "description": "Open-source TUI coding agent — TypeScript / Bun monorepo with multi-provider routing, MCP, LSP, and Plan/Agent/YOLO modes.",
-  "license": "Apache-2.0",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/LichAmnesia/openseek.git"
