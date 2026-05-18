@@ -18,6 +18,8 @@ import { runSession, type SessionState } from "@openseek/session";
 import { runWizard, type WizardStep } from "@openseek/tui";
 import { startServer } from "@openseek/server";
 
+import rootPkg from "../../../package.json" with { type: "json" };
+
 import { HELP_TEXT, parseArgv, type ParsedArgv } from "./argv.ts";
 import { runDoctor } from "./doctor.ts";
 import { runInteractive, type InteractiveOpts } from "./interactive.ts";
@@ -27,7 +29,7 @@ import { userMessage } from "./wire.ts";
 import { missingApiKeyMessage, providerRequiresApiKey } from "./provider-auth.ts";
 
 export const PACKAGE_NAME = "@openseek/cli";
-export const VERSION = "0.0.1";
+export const VERSION: string = (rootPkg as { version: string }).version;
 
 export interface RunResult {
   /** 0 on clean exit, non-zero for errors. */
