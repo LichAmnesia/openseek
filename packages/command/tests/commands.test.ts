@@ -352,6 +352,60 @@ test("/help with unknown command says unknown", async () => {
   expect(r.payload.text).toContain("unknown");
 });
 
+test("/help lists ALL registered commands (no 20-row truncation)", async () => {
+  const many = Array.from({ length: 108 }, (_, i) => ({
+    name: `cmd-${i.toString().padStart(3, "0")}`,
+    description: `command number ${i}`,
+    category: "advanced" as const,
+  }));
+  const r = await find("help").handle({ state: { allCommands: many } });
+  const text = r.payload.text ?? "";
+  // Spot-check first, last, and an arbitrary mid command (past the old 20-row cap).
+  expect(text).toContain("/cmd-000");
+  expect(text).toContain("/cmd-050");
+  expect(text).toContain("/cmd-107");
+  expect(text).toContain("108 commands total");
+});
+
+test("/help groups by category and lists each section", async () => {
+  const all = [
+    { name: "model", description: "switch model", category: "config" as const },
+    { name: "clear", description: "clear transcript", category: "session" as const },
+    { name: "exit", description: "quit", category: "session" as const },
+  ];
+  const r = await find("help").handle({ state: { allCommands: all } });
+  const text = r.payload.text ?? "";
+  expect(text).toContain("Session");
+  expect(text).toContain("Config");
+  expect(text).toContain("/model");
+  expect(text).toContain("/clear");
+});
+
+test("/help <category> filters to that category", async () => {
+  const all = [
+    { name: "model", description: "switch model", category: "config" as const },
+    { name: "clear", description: "clear transcript", category: "session" as const },
+  ];
+  const r = await find("help").handle({ args: ["session"], state: { allCommands: all } });
+  const text = r.payload.text ?? "";
+  expect(text).toContain("/clear");
+  expect(text).not.toContain("/model");
+  expect(text).toContain("in /session");
+});
+
+test("/help all returns a flat list", async () => {
+  const all = [
+    { name: "model", description: "switch model", category: "config" as const },
+    { name: "clear", description: "clear transcript", category: "session" as const },
+  ];
+  const r = await find("help").handle({ args: ["all"], state: { allCommands: all } });
+  const text = r.payload.text ?? "";
+  expect(text).toContain("/model");
+  expect(text).toContain("/clear");
+  expect(text).not.toContain("Session\n");
+  expect(text).toContain("2 commands total");
+});
+
 test("/upgrade signals no upstream registry", async () => {
   const r = await find("upgrade").handle({});
   expect(r.payload.text).toContain("no-op");

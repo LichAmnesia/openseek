@@ -13,9 +13,10 @@ export interface ParsedArgv {
   help: boolean;
   /**
    * Subcommand. Phase 3 adds `setup` (always-run wizard) and `model`
-   * (jump straight to model picker). `serve` predates v0.6.
+   * (jump straight to model picker). `serve` predates v0.6. `doctor`
+   * prints the resolved config + per-field source.
    */
-  subcommand?: "setup" | "model" | "serve";
+  subcommand?: "setup" | "model" | "serve" | "doctor";
   /** Boot the headless HTTP/SSE server when subcommand=serve. */
   serveHttp: boolean;
   /** Custom port (`--port`). */
@@ -30,7 +31,7 @@ export function parseArgv(argv: string[]): ParsedArgv {
   const out: ParsedArgv = { version: false, help: false, serveHttp: false, noSetup: false };
   let i = 0;
   const head = argv[0];
-  if (head === "serve" || head === "setup" || head === "model") {
+  if (head === "serve" || head === "setup" || head === "model" || head === "doctor") {
     out.subcommand = head;
     i = 1;
   }
@@ -77,6 +78,7 @@ Usage:
   openseek -p "your prompt"   Same as above
   openseek setup              Run the onboarding wizard and save to config.toml
   openseek model              Jump to the model picker only
+  openseek doctor             Print resolved config + per-field source layer
   openseek serve --http       Start HTTP/SSE API server (v0.6)
 
 Options:
@@ -97,10 +99,13 @@ Slash commands (inside the TUI):
   /help              Show slash-command help
   /quit (or /exit)   Exit OpenSeek
 
-Configure:
-  export OPENSEEK_API_KEY=<your-mikan-key>
-  or write ~/.openseek/config.toml
+Configure (precedence: env > project > user > default):
+  1. env       OPENSEEK_PROVIDER / OPENSEEK_MODEL / OPENSEEK_API_KEY / OPENSEEK_BASE_URL
+  2. project   <workspace>/.openseek/config.toml  (model only — secrets ignored)
+  3. user      ~/.openseek/config.toml
+  4. default   built-in fallbacks
+  Run 'openseek doctor' to see where each value resolved from.
 
 Docs:
-  https://github.com/openseek/openseek
+  https://github.com/LichAmnesia/openseek
 `;

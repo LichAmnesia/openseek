@@ -53,9 +53,45 @@ ln -sf "$PWD/bin/openseek" ~/.local/bin/openseek
 
 ```bash
 openseek               # start the TUI
-openseek doctor        # health check
+openseek doctor        # print resolved config + per-field source layer
 openseek serve --http  # headless HTTP/SSE on :7117
 ```
+
+## Configuration
+
+OpenSeek resolves each setting (provider / model / API key / base URL) from
+the highest layer that defines it. Higher layers override lower ones.
+
+| # | Layer | Location | Notes |
+|---|---|---|---|
+| 1 | **env** | `OPENSEEK_PROVIDER`, `OPENSEEK_MODEL`, `OPENSEEK_API_KEY`, `OPENSEEK_BASE_URL` | Plus provider-specific keys (`DEEPSEEK_API_KEY`, `ANTHROPIC_API_KEY`, etc.) |
+| 2 | **project overlay** | `<workspace>/.openseek/config.toml` | Sandboxed — only `model` is honored. `api_key` / `base_url` / `provider` are silently dropped so a checked-in overlay can't leak secrets or hijack the provider. |
+| 3 | **user config** | `~/.openseek/config.toml` | Persisted by the first-run wizard (`openseek setup`). 0600 perms. |
+| 4 | **default** | hard-coded fallbacks | What ships in the binary. |
+
+Run `openseek doctor` to see exactly where each value resolved from:
+
+```
+$ openseek doctor
+openseek doctor
+
+Resolved configuration:
+  provider   deepseek                       ← user (~/.openseek/config.toml)
+  model      deepseek-v4-flash              ← user (~/.openseek/config.toml)
+  api_key    sk-a…b8e2                      ← env
+  base_url   (provider default)             ← built-in default
+
+Precedence (highest first):
+  1. env       OPENSEEK_PROVIDER / OPENSEEK_MODEL / OPENSEEK_API_KEY / OPENSEEK_BASE_URL
+  2. project   <workspace>/.openseek/config.toml  (model only — secrets ignored)
+  3. user      ~/.openseek/config.toml
+  4. default   built-in fallbacks
+```
+
+Inside the TUI, `/help` lists all slash commands grouped by category;
+`/help <name>` shows details for one command, `/help <category>` filters
+to a single category (`session` / `config` / `tools` / `git` / `agent` /
+`skills` / `diagnostics` / `advanced` / …), and `/help all` is a flat list.
 
 ## Develop
 

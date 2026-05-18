@@ -16,6 +16,10 @@ test("`openseek serve` → subcommand: serve (existing)", () => {
   expect(parseArgv(["serve"]).subcommand).toBe("serve");
 });
 
+test("`openseek doctor` → subcommand: doctor", () => {
+  expect(parseArgv(["doctor"]).subcommand).toBe("doctor");
+});
+
 test("setup + --no-setup keeps subcommand: setup (--no-setup ignored here)", () => {
   const r = parseArgv(["setup", "--no-setup"]);
   expect(r.subcommand).toBe("setup");

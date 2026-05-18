@@ -282,7 +282,7 @@ export async function runInteractive(opts: InteractiveOpts): Promise<Interactive
     commandState.currentProvider = opts.provider.id;
     commandState.allCommands = commands
       .list()
-      .map((c) => ({ name: c.name, description: c.description }));
+      .map((c) => ({ name: c.name, description: c.description, category: c.category }));
     if (usage()) commandState.usage = usage();
     const session: NonNullable<CommandContext["session"]> = {
       messages: wireMessages,

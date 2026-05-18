@@ -51,9 +51,44 @@ ln -sf "$PWD/bin/openseek" ~/.local/bin/openseek
 
 ```bash
 openseek               # 启动 TUI
-openseek doctor        # 健康检查
+openseek doctor        # 打印 resolved config + 每个字段的来源层
 openseek serve --http  # 无头模式, HTTP/SSE 监听 :7117
 ```
+
+## 配置
+
+OpenSeek 用**分层覆盖**解析每个设置 (provider / model / API key / base URL),
+高层覆盖低层。
+
+| # | 层 | 位置 | 说明 |
+|---|---|---|---|
+| 1 | **env** | `OPENSEEK_PROVIDER` / `OPENSEEK_MODEL` / `OPENSEEK_API_KEY` / `OPENSEEK_BASE_URL` | 也认 provider 专属变量 (`DEEPSEEK_API_KEY` / `ANTHROPIC_API_KEY` 等) |
+| 2 | **project overlay** | `<workspace>/.openseek/config.toml` | 沙盒化 — 只认 `model`。`api_key` / `base_url` / `provider` 字段会被静默丢弃, 防止 checked-in 的 overlay 泄密钥或劫持 provider。 |
+| 3 | **user config** | `~/.openseek/config.toml` | 首次运行向导 (`openseek setup`) 写入, 0600 权限。 |
+| 4 | **default** | 内置 fallback | binary 里 hard-code 的值。 |
+
+跑 `openseek doctor` 看每个值具体从哪一层来:
+
+```
+$ openseek doctor
+openseek doctor
+
+Resolved configuration:
+  provider   deepseek                       ← user (~/.openseek/config.toml)
+  model      deepseek-v4-flash              ← user (~/.openseek/config.toml)
+  api_key    sk-a…b8e2                      ← env
+  base_url   (provider default)             ← built-in default
+
+Precedence (highest first):
+  1. env       OPENSEEK_PROVIDER / OPENSEEK_MODEL / OPENSEEK_API_KEY / OPENSEEK_BASE_URL
+  2. project   <workspace>/.openseek/config.toml  (model only — secrets ignored)
+  3. user      ~/.openseek/config.toml
+  4. default   built-in fallbacks
+```
+
+TUI 里 `/help` 按 category 分组列出所有 slash 命令; `/help <name>` 看单条详情,
+`/help <category>` 按分类过滤 (`session` / `config` / `tools` / `git` / `agent`
+/ `skills` / `diagnostics` / `advanced` / …), `/help all` 是平铺列表。
 
 ## 开发
 

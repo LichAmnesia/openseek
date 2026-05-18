@@ -19,6 +19,7 @@ import { runWizard, type WizardStep } from "@openseek/tui";
 import { startServer } from "@openseek/server";
 
 import { HELP_TEXT, parseArgv, type ParsedArgv } from "./argv.ts";
+import { runDoctor } from "./doctor.ts";
 import { runInteractive, type InteractiveOpts } from "./interactive.ts";
 import { buildWizardProviders } from "./runtime-switch.ts";
 import { shouldRunSetup } from "./setup-gate.ts";
@@ -52,6 +53,10 @@ export async function runOpenseek(argv: string[]): Promise<RunResult> {
 
   if (args.subcommand === "serve") {
     return await runServe(args);
+  }
+
+  if (args.subcommand === "doctor") {
+    return runDoctor(workspace);
   }
 
   // Subcommands that ALWAYS run the wizard, then exit (no TUI loop after).
