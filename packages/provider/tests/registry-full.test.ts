@@ -37,6 +37,8 @@ test("expected v0.5 providers are all registered (incl. hidden mikan)", () => {
   // providerRegistry stays fully populated even when listProviders() filters
   // mikan — confirms we hide for picker UX without breaking direct lookup.
   const expected = [
+    "relayrouter",
+    "relayrouter-anthropic",
     "mikan",
     "openai",
     "deepseek",

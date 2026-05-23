@@ -64,6 +64,7 @@ const STUB_ALLOWLIST = {
     // Providers with no real-API smoke yet. Capability matrix is real,
     // but live request hasn't been verified. Tracked so we don't claim
     // completeness without proof. Activated by env keys per PROVIDERS.md.
+    "relayrouter", "relayrouter-anthropic",
     "openai", "deepseek", "deepseek-cn", "fireworks", "nvidia-nim", "novita",
     "openrouter", "sglang", "vllm", "groq", "together", "cerebras",
     "deepinfra", "perplexity", "mistral", "xai", "cohere", "vercel-gateway",

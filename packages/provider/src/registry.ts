@@ -1,10 +1,11 @@
 // Built-in provider registry for OpenSeek.
 //
-// v0.5 ships the full 25-provider matrix:
-//  - 19 OpenAI-compat (mikan, openai, deepseek, deepseek-cn, fireworks,
-//    nvidia-nim, novita, openrouter, sglang, vllm, groq, together, cerebras,
-//    deepinfra, perplexity, mistral, xai, cohere, vercel-gateway)
-//  -  4 Anthropic-protocol (anthropic, bedrock, vertex, azure-foundry)
+// v0.5 ships the full 27-provider matrix:
+//  - 20 OpenAI-compat (relayrouter, mikan, openai, deepseek, deepseek-cn,
+//    fireworks, nvidia-nim, novita, openrouter, sglang, vllm, groq, together,
+//    cerebras, deepinfra, perplexity, mistral, xai, cohere, vercel-gateway)
+//  -  5 Anthropic-protocol (relayrouter-anthropic, anthropic, bedrock,
+//     vertex, azure-foundry)
 //  -  2 Google Gemini      (google, vertex-google)
 //  -  2 local/custom OpenAI-compat (ollama, custom)
 //
@@ -38,6 +39,8 @@ import { ollamaProvider } from "./providers/ollama.ts";
 import { openaiProvider } from "./providers/openai.ts";
 import { openrouterProvider } from "./providers/openrouter.ts";
 import { perplexityProvider } from "./providers/perplexity.ts";
+import { relayrouterAnthropicProvider } from "./providers/relayrouter-anthropic.ts";
+import { relayrouterProvider } from "./providers/relayrouter.ts";
 import { sglangProvider } from "./providers/sglang.ts";
 import { togetherProvider } from "./providers/together.ts";
 import { vercelGatewayProvider } from "./providers/vercel-gateway.ts";
@@ -48,6 +51,11 @@ import { xaiProvider } from "./providers/xai.ts";
 import type { LLMProvider, ProviderModelInfo } from "./types.ts";
 
 const ALL_PROVIDERS: LLMProvider[] = [
+  // OpenAI-compat aggregator pinned to the top so it surfaces first in the
+  // picker. relayrouter.io is a paid relay; same host also speaks native
+  // Anthropic Messages — see `relayrouter-anthropic` below.
+  relayrouterProvider,
+  relayrouterAnthropicProvider,
   // OpenAI-compat (with reasoning replay for DeepSeek-shaped weights)
   mikanProvider,
   openaiProvider,
@@ -116,6 +124,14 @@ export interface ProviderListing {
 }
 
 const PROVIDER_LABELS: Record<string, { label: string; description: string }> = {
+  relayrouter: {
+    label: "RelayRouter",
+    description: "relayrouter.io · OpenAI-compat (GPT-5.x / Codex group)",
+  },
+  "relayrouter-anthropic": {
+    label: "RelayRouter (Claude)",
+    description: "relayrouter.io · native Anthropic Messages (Claude group)",
+  },
   mikan: { label: "mikan-cloud", description: "DeepSeek V4 via gateway · wallet + cache" },
   openai: { label: "OpenAI", description: "Direct api.openai.com" },
   deepseek: { label: "DeepSeek (intl)", description: "api.deepseek.com" },

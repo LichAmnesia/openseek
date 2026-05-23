@@ -52,6 +52,24 @@ export const PRICING: Record<string, ModelPricing> = {
   "gpt-4o": { input: 2.5, cachedInput: 1.25, output: 10.0 },
   "gpt-4o-mini": { input: 0.15, cachedInput: 0.075, output: 0.6 },
 
+  // ---------- RelayRouter (relayrouter.io) ----------
+  // Rates below are UPSTREAM LIST PRICE (1x baseline). RelayRouter bills
+  // upstream tokens × the key's group multiplier (倍率) — e.g. GPT 0.5x
+  // halves cost, Claude 官方API 5.5x multiplies by 5.5, Codex 0.75x trims
+  // 25 %, Deepseek / Kimi / Minimax sit at 1x. Switch groups on the
+  // dashboard; we don't probe live rates yet.
+  //
+  // GPT / Codex (upstream OpenAI rate card placeholder pending public 5.x rates):
+  "gpt-5.5": { input: 5.0, cachedInput: 1.25, output: 15.0 },
+  "gpt-5.4": { input: 5.0, cachedInput: 1.25, output: 15.0 },
+  "gpt-5.4-mini": { input: 0.25, cachedInput: 0.06, output: 1.0 },
+  "gpt-5.3-codex": { input: 2.5, cachedInput: 0.625, output: 10.0 },
+  "gpt-5.3-codex-spark": { input: 0.4, cachedInput: 0.1, output: 1.6 },
+  // Kimi (Moonshot k2 — published list rate as of 2026-Q1).
+  "kimi-k2-0905-preview": { input: 0.6, cachedInput: 0.15, output: 2.5 },
+  // MiniMax abab / text — published list rate.
+  "minimax-text-01": { input: 0.2, cachedInput: 0.05, output: 1.1 },
+
   // ---------- Anthropic Claude family ----------
   // Anthropic has held sonnet pricing stable at $3/$15 across 4.5 → 4.6.
   // TODO: confirm Opus 4.7 + Haiku 4.5 — placeholders mirror the most
