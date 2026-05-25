@@ -29,9 +29,9 @@
 
 ## 为什么用 OpenSeek？
 
-现代 AI 编程工具 —— Claude Code、Codex、Cursor —— 都很好用, 但都是闭源, 还把你锁死在特定 provider 上。**OpenSeek** 给你同样的终端 agentic 体验, 开源, **27 个内置 provider** 任你 BYOK, 还有透明的成本表。
+现代 AI 编程工具 —— Claude Code、Codex、Cursor —— 都很好用, 但都是闭源, 还把你锁死在特定 provider 上。**OpenSeek** 给你同样的终端 agentic 体验, 开源, **28 个内置 provider** 任你 BYOK, 还有透明的成本表。
 
-- **27 个内置 provider** —— OpenAI-compat (Mikan、DeepSeek、OpenRouter、Groq、Fireworks、NVIDIA NIM、Together、Cerebras、DeepInfra、Perplexity、Mistral、xAI、Cohere、Vercel Gateway、Novita、SGLang、vLLM、**RelayRouter**)、Anthropic 协议 (Anthropic、Bedrock、Vertex、Azure Foundry、**RelayRouter-Anthropic**)、Google (Gemini、Vertex)、本地 (Ollama、custom)
+- **28 个内置 provider** —— OpenAI-compat (Mikan、DeepSeek、OpenRouter、Groq、Fireworks、NVIDIA NIM、Together、Cerebras、DeepInfra、Perplexity、Mistral、xAI、Cohere、Vercel Gateway、Novita、SGLang、vLLM、MiniMax、**RelayRouter**)、Anthropic 协议 (Anthropic、Bedrock、Vertex、Azure Foundry、**RelayRouter-Anthropic**)、Google (Gemini、Vertex)、本地 (Ollama、custom)
 - **50+ 工具, 100+ slash 命令** —— 文件操作、shell、网搜、MCP 并行、Plan 树、sub-agent、RLM
 - **Plan / Agent / YOLO 三种模式** —— 只读规划 → 受确认执行 → 完全自动
 - **MCP client** —— stdio / SSE / websocket 三种传输, 一键装 skills / server
@@ -156,7 +156,7 @@ bun run verify      # 三件套全跑
 openseek/
 ├── packages/         14 个 workspace package
 │   ├── core/         共享叶子工具
-│   ├── provider/     27 个 provider 适配 (Vercel ai SDK)
+│   ├── provider/     28 个 provider 适配 (Vercel ai SDK)
 │   ├── session/      主对话循环 + compaction 策略
 │   ├── tool/         内置工具注册表
 │   ├── command/      slash 命令注册表

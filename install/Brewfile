@@ -7,7 +7,7 @@
 # Skeleton kept here so contributors can validate the schema offline:
 
 class Openseek < Formula
-  desc "Open-source TUI coding agent — TS/Bun monorepo, 27 providers, 52 tools"
+  desc "Open-source TUI coding agent — TS/Bun monorepo, 28 providers, 52 tools"
   homepage "https://openseek.dev"
   version "1.0.0"
   license "MIT"

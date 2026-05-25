@@ -216,6 +216,8 @@ function providerApiKeyEnvNames(provider: string): string[] {
       return ["COHERE_API_KEY"];
     case "vercel-gateway":
       return ["VERCEL_AI_GATEWAY_API_KEY"];
+    case "minimax":
+      return ["MINIMAX_API_KEY"];
     case "anthropic":
       return ["ANTHROPIC_API_KEY"];
     case "azure-foundry":
@@ -247,6 +249,8 @@ function providerBaseUrlEnvNames(provider: string): string[] {
       return ["OLLAMA_BASE_URL"];
     case "azure-foundry":
       return ["AZURE_AI_ENDPOINT"];
+    case "minimax":
+      return ["MINIMAX_BASE_URL"];
     case "custom":
       return ["CUSTOM_BASE_URL"];
     default:
