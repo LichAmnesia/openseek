@@ -58,6 +58,7 @@ test("expected v0.5 providers are all registered (incl. hidden mikan)", () => {
     "xai",
     "cohere",
     "vercel-gateway",
+    "minimax",
     "anthropic",
     "bedrock",
     "vertex",

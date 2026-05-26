@@ -1,9 +1,10 @@
 // Built-in provider registry for OpenSeek.
 //
-// v0.5 ships the full 27-provider matrix:
-//  - 20 OpenAI-compat (relayrouter, mikan, openai, deepseek, deepseek-cn,
+// v0.5+ ships the 28-provider matrix:
+//  - 21 OpenAI-compat (relayrouter, mikan, openai, deepseek, deepseek-cn,
 //    fireworks, nvidia-nim, novita, openrouter, sglang, vllm, groq, together,
-//    cerebras, deepinfra, perplexity, mistral, xai, cohere, vercel-gateway)
+//    cerebras, deepinfra, perplexity, mistral, xai, cohere, vercel-gateway,
+//    minimax)
 //  -  5 Anthropic-protocol (relayrouter-anthropic, anthropic, bedrock,
 //     vertex, azure-foundry)
 //  -  2 Google Gemini      (google, vertex-google)
@@ -32,6 +33,7 @@ import { fireworksProvider } from "./providers/fireworks.ts";
 import { googleProvider } from "./providers/google.ts";
 import { groqProvider } from "./providers/groq.ts";
 import { mikanProvider } from "./providers/mikan.ts";
+import { minimaxProvider } from "./providers/minimax.ts";
 import { mistralProvider } from "./providers/mistral.ts";
 import { novitaProvider } from "./providers/novita.ts";
 import { nvidiaNimProvider } from "./providers/nvidia-nim.ts";
@@ -76,6 +78,7 @@ const ALL_PROVIDERS: LLMProvider[] = [
   xaiProvider,
   cohereProvider,
   vercelGatewayProvider,
+  minimaxProvider,
   // Anthropic protocol
   anthropicProvider,
   bedrockProvider,
@@ -151,6 +154,7 @@ const PROVIDER_LABELS: Record<string, { label: string; description: string }> = 
   xai: { label: "xAI Grok", description: "api.x.ai" },
   cohere: { label: "Cohere", description: "Command R family" },
   "vercel-gateway": { label: "Vercel AI Gateway", description: "ai-gateway.vercel.sh" },
+  minimax: { label: "MiniMax", description: "api.minimax.io · M2.7 family · 204K ctx" },
   anthropic: { label: "Anthropic", description: "Direct api.anthropic.com" },
   bedrock: { label: "AWS Bedrock", description: "Anthropic via Bedrock" },
   vertex: { label: "Vertex (Anthropic)", description: "GCP Vertex Anthropic" },
@@ -212,6 +216,7 @@ export function providerByModel(model: string): LLMProvider | undefined {
   if (model.startsWith("deepseek-")) return deepseekProvider;
   if (model.startsWith("llama-") || model.startsWith("llama3")) return groqProvider;
   if (model.startsWith("grok-")) return xaiProvider;
+  if (model.startsWith("MiniMax-")) return minimaxProvider;
   if (model.startsWith("mistral-") || model.startsWith("ministral-"))
     return mistralProvider;
   if (model.startsWith("command-")) return cohereProvider;

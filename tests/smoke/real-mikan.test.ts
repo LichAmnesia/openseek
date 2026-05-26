@@ -2,7 +2,7 @@
 //
 // Drives 8 scenarios against the configured provider. Most scenarios run 5
 // rounds; web_search runs 3 because it adds external IO. By default this uses
-// mikan-cloud + deepseek-v4-flash. You can swap to any of the 27 providers via
+// mikan-cloud + deepseek-v4-flash. You can swap to any of the 28 providers via
 // env without changing this file:
 //
 //   # mikan-cloud (default)

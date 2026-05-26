@@ -57,6 +57,7 @@ export { mistralProvider } from "./providers/mistral.ts";
 export { xaiProvider } from "./providers/xai.ts";
 export { cohereProvider } from "./providers/cohere.ts";
 export { vercelGatewayProvider } from "./providers/vercel-gateway.ts";
+export { minimaxProvider, minimaxCapability } from "./providers/minimax.ts";
 
 // Anthropic-protocol providers (4)
 export { anthropicProvider } from "./providers/anthropic.ts";

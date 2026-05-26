@@ -128,6 +128,14 @@ export const PRICING: Record<string, ModelPricing> = {
   // ---------- F5 P1: Perplexity Sonar ----------
   // TODO: confirm perplexity.ai/pricing. Sonar tier is roughly $1/$1 per M.
   sonar: { input: 1.0, cachedInput: 0.25, output: 1.0 },
+
+  // ---------- MiniMax (api.minimax.io) ----------
+  // Source: platform.minimax.io/docs/guides/pricing-paygo (M2.7 family).
+  // M2.7 frontier $0.30 / $1.20 ; highspeed sibling $0.60 / $2.40 (faster
+  // but pricier per token). Prefix-cache reads bill at $0.06 / M for both
+  // SKUs — same as Anthropic's Sonnet 90% discount shape.
+  "MiniMax-M2.7": { input: 0.3, cachedInput: 0.06, output: 1.2 },
+  "MiniMax-M2.7-highspeed": { input: 0.6, cachedInput: 0.06, output: 2.4 },
 };
 
 const PER_MILLION = 1_000_000;

@@ -29,9 +29,9 @@ English | [中文](./README-zh.md)
 
 ## Why OpenSeek?
 
-Modern AI coding tools — Claude Code, Codex, Cursor — are great but closed-source and lock you to specific providers. **OpenSeek** gives you the same agentic terminal experience, open-source, with full BYOK freedom across **27 built-in providers** and a transparent cost meter.
+Modern AI coding tools — Claude Code, Codex, Cursor — are great but closed-source and lock you to specific providers. **OpenSeek** gives you the same agentic terminal experience, open-source, with full BYOK freedom across **28 built-in providers** and a transparent cost meter.
 
-- **27 built-in providers** — OpenAI-compat (Mikan, DeepSeek, OpenRouter, Groq, Fireworks, NVIDIA NIM, Together, Cerebras, DeepInfra, Perplexity, Mistral, xAI, Cohere, Vercel Gateway, Novita, SGLang, vLLM, **RelayRouter**), Anthropic-protocol (Anthropic, Bedrock, Vertex, Azure Foundry, **RelayRouter-Anthropic**), Google (Gemini, Vertex), and local (Ollama, custom)
+- **28 built-in providers** — OpenAI-compat (Mikan, DeepSeek, OpenRouter, Groq, Fireworks, NVIDIA NIM, Together, Cerebras, DeepInfra, Perplexity, Mistral, xAI, Cohere, Vercel Gateway, Novita, SGLang, vLLM, MiniMax, **RelayRouter**), Anthropic-protocol (Anthropic, Bedrock, Vertex, Azure Foundry, **RelayRouter-Anthropic**), Google (Gemini, Vertex), and local (Ollama, custom)
 - **50+ tools, 100+ slash commands** — file ops, shell, web search, MCP fan-out, plan-mode tree, sub-agents, RLM
 - **Plan / Agent / YOLO modes** — read-only planning → confirmed execution → full autonomy
 - **MCP client** — stdio / SSE / websocket transports, 1-click skills/server install
@@ -156,7 +156,7 @@ bun run verify      # all three
 openseek/
 ├── packages/         14 workspace packages
 │   ├── core/         shared leaf utilities
-│   ├── provider/     27 provider adapters (Vercel ai SDK)
+│   ├── provider/     28 provider adapters (Vercel ai SDK)
 │   ├── session/      main agent loop + compaction strategies
 │   ├── tool/         built-in tool registry
 │   ├── command/      slash-command registry
