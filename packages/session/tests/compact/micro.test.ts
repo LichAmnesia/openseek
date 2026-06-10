@@ -2,15 +2,12 @@
 
 import { describe, expect, test } from "bun:test";
 import type { OpenSeekMessage } from "@openseek/provider";
-import {
-  CLEARED_TOOL_RESULT_MARKER,
-  microCompact,
-} from "../../src/compact/index.ts";
+import { CLEARED_TOOL_RESULT_MARKER, microCompact } from "../../src/compact/index.ts";
 
-function toolResultMsg(id: string, body: string): OpenSeekMessage {
+function toolResultMsg(id: string, body: string, toolName?: string): OpenSeekMessage {
   return {
     role: "tool",
-    content: [{ type: "tool_result", toolCallId: id, result: body }],
+    content: [{ type: "tool_result", toolCallId: id, toolName, result: body }],
     toolCallId: id,
   };
 }
@@ -44,7 +41,7 @@ describe("microCompact", () => {
 
   test("clears oldest results when count > keep (default 5)", () => {
     const messages = [
-      toolResultMsg("c1", "alpha"),
+      toolResultMsg("c1", "alpha", "read"),
       toolResultMsg("c2", "beta"),
       toolResultMsg("c3", "gamma"),
       toolResultMsg("c4", "delta"),
@@ -56,7 +53,10 @@ describe("microCompact", () => {
     // First 2 cleared, last 5 kept verbatim.
     const first = out.messages[0]?.content[0]!;
     const second = out.messages[1]?.content[0]!;
-    if (first.type === "tool_result") expect(first.result).toBe(CLEARED_TOOL_RESULT_MARKER);
+    if (first.type === "tool_result") {
+      expect(first.result).toBe(CLEARED_TOOL_RESULT_MARKER);
+      expect(first.toolName).toBe("read");
+    }
     if (second.type === "tool_result") expect(second.result).toBe(CLEARED_TOOL_RESULT_MARKER);
 
     for (let i = 2; i < 7; i++) {

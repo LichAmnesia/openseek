@@ -9,11 +9,7 @@
 // is true (light enough to be a no-op on conversations with few results).
 
 import type { ContentBlock, OpenSeekMessage } from "@openseek/provider";
-import {
-  CLEARED_TOOL_RESULT_MARKER,
-  type CompactInput,
-  type CompactOutput,
-} from "./types.ts";
+import { CLEARED_TOOL_RESULT_MARKER, type CompactInput, type CompactOutput } from "./types.ts";
 
 export interface MicroCompactOptions {
   /** Default 5: how many most-recent tool_result blocks to keep verbatim. */
@@ -53,10 +49,8 @@ export function microCompact(input: CompactInput, opts: MicroCompactOptions = {}
       if (blk.type === "tool_result" && toClear.has(`${m}:${b}`)) {
         mutated = true;
         return {
-          type: "tool_result",
-          toolCallId: blk.toolCallId,
+          ...blk,
           result: CLEARED_TOOL_RESULT_MARKER,
-          isError: blk.isError,
         };
       }
       return blk;

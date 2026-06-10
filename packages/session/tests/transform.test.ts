@@ -67,6 +67,7 @@ describe("convertToAiSdk", () => {
           {
             type: "tool_result",
             toolCallId: "c1",
+            toolName: "read",
             result: "file contents",
           },
         ],
@@ -77,11 +78,34 @@ describe("convertToAiSdk", () => {
     const content = out[0]?.content as Array<{
       type: string;
       toolCallId: string;
+      toolName: string;
       output: { type: string; value: string };
     }>;
     expect(content[0]?.type).toBe("tool-result");
     expect(content[0]?.toolCallId).toBe("c1");
+    expect(content[0]?.toolName).toBe("read");
     expect(content[0]?.output).toEqual({ type: "text", value: "file contents" });
+  });
+
+  test("tool result message infers toolName from previous assistant tool call", () => {
+    const msgs: OpenSeekMessage[] = [
+      {
+        role: "assistant",
+        content: [
+          { type: "tool_call", toolCallId: "c1", toolName: "read", args: { path: "a.md" } },
+        ],
+      },
+      {
+        role: "tool",
+        toolCallId: "c1",
+        content: [{ type: "tool_result", toolCallId: "c1", result: "file contents" }],
+      },
+    ];
+
+    const out = convertToAiSdk(msgs);
+    const content = out[1]?.content as Array<{ type: string; toolName: string }>;
+    expect(content[0]?.type).toBe("tool-result");
+    expect(content[0]?.toolName).toBe("read");
   });
 
   test("error tool result encodes as error-text", () => {
@@ -89,9 +113,7 @@ describe("convertToAiSdk", () => {
       {
         role: "tool",
         toolCallId: "c2",
-        content: [
-          { type: "tool_result", toolCallId: "c2", result: "boom", isError: true },
-        ],
+        content: [{ type: "tool_result", toolCallId: "c2", result: "boom", isError: true }],
       },
     ];
     const out = convertToAiSdk(msgs);
@@ -180,7 +202,10 @@ describe("convertToolsToAiSdk", () => {
         observed.push({ id: entry.id, name: entry.name, ok: entry.result.kind !== "error" }),
     });
     const wrapped = out.write as unknown as {
-      execute: (input: unknown, opts: { toolCallId: string; messages: unknown[] }) => Promise<unknown>;
+      execute: (
+        input: unknown,
+        opts: { toolCallId: string; messages: unknown[] },
+      ) => Promise<unknown>;
     };
 
     const result = await wrapped.execute({ x: "hello" }, { toolCallId: "call-deny", messages: [] });
@@ -206,7 +231,10 @@ describe("convertToolsToAiSdk", () => {
       },
     });
     const wrapped = out.write as unknown as {
-      execute: (input: unknown, opts: { toolCallId: string; messages: unknown[] }) => Promise<unknown>;
+      execute: (
+        input: unknown,
+        opts: { toolCallId: string; messages: unknown[] },
+      ) => Promise<unknown>;
     };
 
     const result = await wrapped.execute({ x: "hello" }, { toolCallId: "call-yolo", messages: [] });

@@ -89,6 +89,8 @@ export type ContentBlock =
   | {
       type: "tool_result";
       toolCallId: string;
+      /** Optional because older persisted histories only stored the call id. */
+      toolName?: string;
       result: unknown;
       isError?: boolean;
     };

@@ -12,8 +12,10 @@ import type { ToolApprovalRequest } from "./types.ts";
 /** Convert OpenSeek's role-tagged messages to ai-SDK's ModelMessage[]. */
 export function convertToAiSdk(messages: OpenSeekMessage[]): ModelMessage[] {
   const out: ModelMessage[] = [];
+  const toolNamesByCallId = new Map<string, string>();
   for (const msg of messages) {
-    const converted = convertOne(msg);
+    rememberToolCalls(msg.content, toolNamesByCallId);
+    const converted = convertOne(msg, toolNamesByCallId);
     if (converted) out.push(converted);
   }
   return out;
@@ -44,7 +46,10 @@ export function splitSystemPrefix(messages: OpenSeekMessage[]): {
   };
 }
 
-function convertOne(msg: OpenSeekMessage): ModelMessage | null {
+function convertOne(
+  msg: OpenSeekMessage,
+  toolNamesByCallId: Map<string, string>,
+): ModelMessage | null {
   switch (msg.role) {
     case "system":
       return { role: "system", content: collapseToText(msg.content) };
@@ -53,9 +58,15 @@ function convertOne(msg: OpenSeekMessage): ModelMessage | null {
     case "assistant":
       return { role: "assistant", content: assistantParts(msg.content) };
     case "tool":
-      return { role: "tool", content: toolParts(msg.content, msg.toolCallId) };
+      return { role: "tool", content: toolParts(msg.content, msg.toolCallId, toolNamesByCallId) };
     default:
       return null;
+  }
+}
+
+function rememberToolCalls(blocks: ContentBlock[], toolNamesByCallId: Map<string, string>): void {
+  for (const block of blocks) {
+    if (block.type === "tool_call") toolNamesByCallId.set(block.toolCallId, block.toolName);
   }
 }
 
@@ -90,15 +101,20 @@ function assistantParts(blocks: ContentBlock[]): any {
 }
 
 // biome-ignore lint/suspicious/noExplicitAny: ToolContent shape uses tagged-union ToolResultOutput we synthesize.
-function toolParts(blocks: ContentBlock[], toolCallId?: string): any {
+function toolParts(
+  blocks: ContentBlock[],
+  toolCallId: string | undefined,
+  toolNamesByCallId: Map<string, string>,
+): any {
   return blocks
     .filter((b) => b.type === "tool_result")
     .map((b) => {
       if (b.type !== "tool_result") return null;
+      const id = b.toolCallId ?? toolCallId ?? "";
       return {
         type: "tool-result" as const,
-        toolCallId: b.toolCallId ?? toolCallId ?? "",
-        toolName: "",
+        toolCallId: id,
+        toolName: b.toolName ?? toolNamesByCallId.get(id) ?? "",
         output: encodeToolOutput(b.result, b.isError),
       };
     })

@@ -1,10 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { z } from "zod";
-import type {
-  LLMProvider,
-  OpenSeekMessage,
-  ProviderCapability,
-} from "@openseek/provider";
+import type { LLMProvider, OpenSeekMessage, ProviderCapability } from "@openseek/provider";
 import type { AnyTool } from "@openseek/tool";
 import { runSession } from "../src/index.ts";
 import {
@@ -155,6 +151,13 @@ describe("runSession streaming", () => {
         ? resEvent.result.result.text
         : "",
     ).toBe("echo:hi");
+    const turnEvent = events.find((e) => e.type === "assistant-turn");
+    const toolMessage =
+      turnEvent && "messages" in turnEvent
+        ? turnEvent.messages.find((m) => m.role === "tool")
+        : undefined;
+    const resultBlock = toolMessage?.content.find((b) => b.type === "tool_result");
+    expect(resultBlock?.type === "tool_result" ? resultBlock.toolName : "").toBe("echo");
   });
 
   test("multi-round tool calls (tool → tool → text) loop correctly", async () => {

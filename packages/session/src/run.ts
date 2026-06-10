@@ -38,9 +38,15 @@ const DEFAULT_MAX_STEPS = 12;
  * exercise it directly — runtime callers should set state.breakCache and
  * let the runner invoke this for them.
  */
-export function stripCacheControl(msg: import("@openseek/provider").OpenSeekMessage): import("@openseek/provider").OpenSeekMessage {
+export function stripCacheControl(
+  msg: import("@openseek/provider").OpenSeekMessage,
+): import("@openseek/provider").OpenSeekMessage {
   const cleaned = msg.content.map((block) => {
-    if (block && typeof block === "object" && "cache_control" in (block as Record<string, unknown>)) {
+    if (
+      block &&
+      typeof block === "object" &&
+      "cache_control" in (block as Record<string, unknown>)
+    ) {
       const { cache_control: _drop, ...rest } = block as Record<string, unknown>;
       return rest as typeof block;
     }
@@ -119,11 +125,7 @@ export async function* runSession(
     approveToolCall: opts.approveToolCall,
     onResult: (entry) => {
       resultIndex.set(entry.id, entry.result);
-      if (
-        opts.lspRouter &&
-        EDIT_TOOLS.has(entry.name) &&
-        entry.result.kind !== "error"
-      ) {
+      if (opts.lspRouter && EDIT_TOOLS.has(entry.name) && entry.result.kind !== "error") {
         const file = extractEditPath(entry.name, entry.input);
         if (file) lspFiles.add(file);
       }
@@ -204,6 +206,7 @@ export async function* runSession(
         assistantBlocks.push({
           type: "tool_result",
           toolCallId: id,
+          toolName: chunk.toolName,
           result,
           isError: true,
         });

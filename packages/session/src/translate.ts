@@ -48,12 +48,11 @@ export function translateChunk(
     blocks.push({
       type: "tool_result",
       toolCallId: id,
+      toolName: chunk.toolName,
       result,
       isError: result.kind === "error",
     });
-    return [
-      { type: "tool-result", result: { id, name: chunk.toolName, result } },
-    ];
+    return [{ type: "tool-result", result: { id, name: chunk.toolName, result } }];
   }
   if (t === "finish") {
     return [{ type: "finish", usage: chunk.totalUsage }];
