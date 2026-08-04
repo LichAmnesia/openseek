@@ -54,11 +54,13 @@ export function nextOpts(current: InteractiveOpts, result: WizardResult): Intera
     apiKey: result.apiKey,
     apiKeyChanged,
   };
-  // Preserve a baseURL only for same-provider model switches. A provider
-  // switch must fall back to the new provider's default endpoint; otherwise
-  // `/provider openai` after `custom` keeps sending OpenAI traffic to the
-  // custom server.
-  if (result.provider === current.provider.id && current.baseURL !== undefined) {
+  // The wizard's explicit baseURL (custom provider) wins. Otherwise preserve
+  // a baseURL only for same-provider model switches — a provider switch must
+  // fall back to the new provider's default endpoint; otherwise `/provider
+  // openai` after `custom` keeps sending OpenAI traffic to the custom server.
+  if (result.baseURL !== undefined) {
+    next.baseURL = result.baseURL;
+  } else if (result.provider === current.provider.id && current.baseURL !== undefined) {
     next.baseURL = current.baseURL;
   }
   // Carry the source map forward — the CLI loop reads it to decide whether
@@ -104,6 +106,7 @@ export async function runtimeSwitch(opts: RuntimeSwitchOpts): Promise<WizardResu
       provider: opts.initial?.provider ?? opts.current.provider.id,
       model: opts.initial?.model ?? opts.current.modelId,
       apiKey: opts.initial?.apiKey ?? opts.current.apiKey,
+      baseURL: opts.initial?.baseURL ?? opts.current.baseURL,
     },
     initialStep,
   });

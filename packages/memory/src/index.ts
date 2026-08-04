@@ -28,4 +28,4 @@ export { memoryDirFor, memoryFile, memoryFilePath } from "./paths.ts";
 
 export { bunMemoryIO, loadMemory, mergeMemory, saveMemory } from "./loader.ts";
 
-export { extractMemories } from "./extract.ts";
+export { extractMemories, sanitizeMemoryItem } from "./extract.ts";

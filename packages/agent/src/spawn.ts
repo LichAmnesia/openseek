@@ -14,7 +14,15 @@ import type { OpenSeekMessage } from "@openseek/provider";
 import { runSession } from "@openseek/session";
 import type { AgentHandle, AgentResult, AgentSpawnDeps, AgentSpawnRequest } from "./types.ts";
 
-const DEFAULT_TIMEOUT_MS = 60_000;
+// A spawned sub-agent runs a whole DELEGATED task, not a single interactive
+// turn, so its defaults are generous: a heavy delegation (e.g. "write 10 xray
+// files + an index + an intel note") routinely needs dozens of tool steps and
+// several minutes on a slow local model. Undersized defaults here silently
+// truncate real work — the child times out or hits its step cap mid-task and
+// returns nothing usable. Callers may still override both via the agent_spawn
+// tool for cheap one-off lookups.
+const DEFAULT_TIMEOUT_MS = 600_000; // 10 min
+const DEFAULT_MAX_STEPS = 40;
 const ID_BYTES = 6;
 
 function newId(): string {
@@ -99,7 +107,7 @@ async function runChild(
     apiKey: deps.apiKey,
     baseURL: deps.baseURL,
     cwd: deps.cwd,
-    maxSteps: req.maxSteps,
+    maxSteps: req.maxSteps ?? DEFAULT_MAX_STEPS,
   });
 
   for await (const ev of gen) {

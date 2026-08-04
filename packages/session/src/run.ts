@@ -159,6 +159,11 @@ export async function* runSession(
       abortSignal: opts.signal,
       stopWhen: stepCountIs(opts.maxSteps ?? DEFAULT_MAX_STEPS),
       providerOptions: buildProviderOptions(effort),
+      // ai-SDK's default onError is console.error(error), which dumps the
+      // full error object (with minified bundle source frames under Bun)
+      // straight to the user's terminal. Errors already reach consumers as
+      // {type:"error"} chunks on fullStream — silence the duplicate.
+      onError: () => {},
     });
     stream = result.fullStream as AsyncIterable<unknown>;
   } catch (err) {

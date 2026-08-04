@@ -61,6 +61,44 @@ test("F5 P0-NEW #2: model subcommand persists ONLY {model} — never apiKey, nev
   expect("provider" in payload).toBe(false);
 });
 
+// ---------- G8.3: base_url persistence via `openseek setup` ----------
+
+test("G8.3: setup persists wizard baseURL for custom provider", () => {
+  const payload = buildSubcommandSavePayload({
+    name: "setup",
+    result: {
+      provider: "custom",
+      model: "qwen3.6-35b-a3b",
+      apiKey: "",
+      baseURL: "http://lich-server.local:8004/v1",
+    },
+    config: { provider: "mikan", model: "deepseek-v4-flash", apiKey: "sk-old" },
+    configSource: { apiKey: "user" },
+  });
+  expect(payload.baseURL).toBe("http://lich-server.local:8004/v1");
+  expect(payload.provider).toBe("custom");
+});
+
+test("G8.3: setup without wizard baseURL clears stale base_url (null)", () => {
+  const payload = buildSubcommandSavePayload({
+    name: "setup",
+    result: { provider: "openai", model: "gpt-5.2", apiKey: "sk-x" },
+    config: { provider: "custom", model: "qwen3.6-35b-a3b", apiKey: "" },
+    configSource: { apiKey: "user" },
+  });
+  expect(payload.baseURL).toBeNull();
+});
+
+test("G8.3: model subcommand never touches base_url", () => {
+  const payload = buildSubcommandSavePayload({
+    name: "model",
+    result: { provider: "custom", model: "other-model", apiKey: "", baseURL: "http://x/v1" },
+    config: { provider: "custom", model: "qwen3.6-35b-a3b", apiKey: "" },
+    configSource: { apiKey: "user" },
+  });
+  expect("baseURL" in payload).toBe(false);
+});
+
 test("F5 P0-NEW #2: model subcommand never persists env-sourced apiKey either", () => {
   const payload = buildSubcommandSavePayload({
     name: "model",

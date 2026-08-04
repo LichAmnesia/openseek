@@ -131,3 +131,38 @@ test("--help short-circuits before the gate runs", () => {
     }),
   ).toBe(false);
 });
+
+// ---------- G8.1: custom provider needs a base URL to be usable ----------
+
+test("custom provider without base_url → wizard runs (even though key optional)", () => {
+  expect(
+    shouldRunSetup({
+      config: { ...baseConfig("user", "custom") },
+      args: { ...baseArgs },
+      isTTY: true,
+    }),
+  ).toBe(true);
+});
+
+test("custom provider WITH base_url → wizard does NOT run", () => {
+  expect(
+    shouldRunSetup({
+      config: {
+        ...baseConfig("user", "custom"),
+        baseURL: "http://lich-server.local:8004/v1",
+      },
+      args: { ...baseArgs },
+      isTTY: true,
+    }),
+  ).toBe(false);
+});
+
+test("custom without base_url in one-shot mode → gate stays closed (fail-fast handles it)", () => {
+  expect(
+    shouldRunSetup({
+      config: { ...baseConfig("user", "custom") },
+      args: { ...baseArgs, prompt: "do the thing" },
+      isTTY: true,
+    }),
+  ).toBe(false);
+});

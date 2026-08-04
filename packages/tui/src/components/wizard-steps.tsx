@@ -49,6 +49,33 @@ export function ProviderStep(props: ProviderStepProps): JSX.Element {
   );
 }
 
+export interface BaseUrlStepProps {
+  value: () => string;
+  onChange: (v: string) => void;
+  onSubmit: () => void;
+}
+
+export function BaseUrlStep(props: BaseUrlStepProps): JSX.Element {
+  return (
+    <box flexDirection="column" flexGrow={1}>
+      <text fg={defaultTheme.system}>
+        Base URL (required — OpenAI-compat endpoint, e.g. http://localhost:8080/v1)
+      </text>
+      <box flexDirection="row">
+        <text fg={defaultTheme.dim}>›&nbsp;</text>
+        <input
+          value={props.value()}
+          focused={true}
+          flexGrow={1}
+          onInput={((v: string) => props.onChange(v)) as never}
+          onSubmit={((_v: string) => props.onSubmit()) as never}
+        />
+      </box>
+      <text fg={defaultTheme.dim}>must start with http:// or https:// — Enter to continue</text>
+    </box>
+  );
+}
+
 export interface ApiKeyStepProps {
   providerId: () => string;
   value: () => string;

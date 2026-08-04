@@ -180,3 +180,33 @@ test("agent_spawn respects model override per call", async () => {
   await agentSpawn.call({ prompt: "x", model: "override-model" }, makeCtx(cwd));
   expect(modelSeen).toBe("override-model");
 });
+
+test("agent_spawn forwards maxSteps to the child, capping its tool-steps", async () => {
+  const { z } = await import("zod");
+  const { toolCallChunks } = await import("../../session/src/mock-provider.ts");
+  // Mock model that requests the noop tool every step so the child would loop
+  // indefinitely if uncapped; the forwarded maxSteps is the only stopper.
+  const handle = createMockModel({
+    phases: Array.from({ length: 40 }, () => ({ chunks: toolCallChunks("noop", {}) })),
+  });
+  const noop = {
+    name: "noop",
+    description: "no-op",
+    inputSchema: z.object({}),
+    permission: "auto" as const,
+    async call() {
+      return { kind: "text" as const, text: "ok" };
+    },
+  };
+  setAgentSpawnDeps({
+    provider: provider(handle.model),
+    model: "mock-model",
+    capability: capability(),
+    // biome-ignore lint/suspicious/noExplicitAny: minimal structural tool for the mock loop.
+    tools: new Map<string, any>([["noop", noop]]),
+  });
+  const result = await agentSpawn.call({ prompt: "loop", maxSteps: 2 }, makeCtx(cwd));
+  expect(result.kind).toBe("text");
+  // maxSteps=2 must stop the child far below the 40 available phases.
+  expect(handle.callCount()).toBeLessThanOrEqual(3);
+});

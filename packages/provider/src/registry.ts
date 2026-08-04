@@ -124,6 +124,8 @@ export interface ProviderListing {
   description: string;
   defaultModel: string;
   availableModels?: ProviderModelInfo[];
+  /** Wizard must collect a base URL for this provider (stub default). */
+  requiresBaseURL?: boolean;
 }
 
 const PROVIDER_LABELS: Record<string, { label: string; description: string }> = {
@@ -162,7 +164,7 @@ const PROVIDER_LABELS: Record<string, { label: string; description: string }> = 
   google: { label: "Google Gemini", description: "generativelanguage.googleapis.com" },
   "vertex-google": { label: "Vertex (Gemini)", description: "GCP Vertex Gemini" },
   ollama: { label: "Ollama (local)", description: "127.0.0.1:11434 — no API key" },
-  custom: { label: "Custom OpenAI-compat", description: "Set base_url + api_key" },
+  custom: { label: "Custom OpenAI-compat", description: "Set base_url (+ optional api_key)" },
 };
 
 export function listProviderListings(): ProviderListing[] {
@@ -175,6 +177,7 @@ export function listProviderListings(): ProviderListing[] {
       defaultModel: p.defaultModel,
     };
     if (p.availableModels !== undefined) out.availableModels = p.availableModels;
+    if (p.requiresBaseURL === true) out.requiresBaseURL = true;
     return out;
   });
 }

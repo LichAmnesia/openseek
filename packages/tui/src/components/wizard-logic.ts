@@ -6,7 +6,7 @@
 
 import type { ProviderModelInfo } from "@openseek/provider";
 
-export type WizardStep = "provider" | "apiKey" | "model" | "done";
+export type WizardStep = "provider" | "baseUrl" | "apiKey" | "model" | "done";
 
 export interface WizardProviderInfo {
   id: string;
@@ -18,11 +18,14 @@ export interface WizardProviderInfo {
   availableModels?: ProviderModelInfo[];
   /** Default model id (used when no availableModels list or to preselect). */
   defaultModel: string;
+  /** Wizard must collect a base URL (provider default is a stub). */
+  requiresBaseURL?: boolean;
 }
 
 export interface WizardState {
   step: WizardStep;
   provider: string;
+  baseURL: string;
   apiKey: string;
   model: string;
 }
@@ -31,19 +34,39 @@ export interface WizardResult {
   provider: string;
   model: string;
   apiKey: string;
+  /** Only set when the provider declares requiresBaseURL. */
+  baseURL?: string;
 }
 
-/** Local providers don't require an API key (they listen on localhost). */
-const LOCAL_PROVIDERS = new Set(["ollama", "vllm", "sglang"]);
+/**
+ * Providers that don't require an API key. Local servers listen on
+ * localhost; `custom` endpoints (llama-server / LM Studio / …) commonly
+ * run unauthenticated — a key can still be entered, it's just optional.
+ */
+const LOCAL_PROVIDERS = new Set(["ollama", "vllm", "sglang", "custom"]);
 
 export function isApiKeyRequired(providerId: string): boolean {
   return !LOCAL_PROVIDERS.has(providerId);
+}
+
+export function isBaseUrlRequired(
+  providerId: string,
+  providers: WizardProviderInfo[],
+): boolean {
+  return providers.find((p) => p.id === providerId)?.requiresBaseURL === true;
+}
+
+/** Minimal shape check for the baseUrl step — must be an http(s) URL. */
+export function isValidBaseUrl(value: string): boolean {
+  const v = value.trim();
+  return v.startsWith("http://") || v.startsWith("https://");
 }
 
 export function initialWizardState(initial?: Partial<WizardState>): WizardState {
   return {
     step: initial?.step ?? "provider",
     provider: initial?.provider ?? "",
+    baseURL: initial?.baseURL ?? "",
     apiKey: initial?.apiKey ?? "",
     model: initial?.model ?? "",
   };
@@ -72,10 +95,15 @@ export function advanceStep(
     case "provider": {
       const match = providers.find((p) => p.id === state.provider);
       if (!match) return state;
-      // When advancing into apiKey, preselect the provider's default model
-      // unless the caller already set one (initial preset via `initial`).
+      // Preselect the provider's default model unless the caller already
+      // set one (initial preset via `initial`).
       const nextModel = state.model || match.defaultModel;
-      return { ...state, step: "apiKey", model: nextModel };
+      const nextStep: WizardStep = match.requiresBaseURL === true ? "baseUrl" : "apiKey";
+      return { ...state, step: nextStep, model: nextModel };
+    }
+    case "baseUrl": {
+      if (!isValidBaseUrl(state.baseURL)) return state;
+      return { ...state, step: "apiKey" };
     }
     case "apiKey": {
       if (isApiKeyRequired(state.provider) && state.apiKey.trim() === "") {
@@ -93,12 +121,18 @@ export function advanceStep(
 }
 
 /** Move one step backwards. `provider` and `done` are absorbing-edge cases. */
-export function backStep(state: WizardState): WizardState {
+export function backStep(state: WizardState, providers: WizardProviderInfo[] = []): WizardState {
   switch (state.step) {
     case "provider":
       return state;
-    case "apiKey":
+    case "baseUrl":
       return { ...state, step: "provider" };
+    case "apiKey": {
+      const prev: WizardStep = isBaseUrlRequired(state.provider, providers)
+        ? "baseUrl"
+        : "provider";
+      return { ...state, step: prev };
+    }
     case "model":
       return { ...state, step: "apiKey" };
     case "done":
@@ -107,10 +141,14 @@ export function backStep(state: WizardState): WizardState {
 }
 
 /** Convenience: snapshot the current state into a result. */
-export function toResult(state: WizardState): WizardResult {
-  return {
+export function toResult(state: WizardState, providers: WizardProviderInfo[] = []): WizardResult {
+  const out: WizardResult = {
     provider: state.provider,
     model: state.model,
     apiKey: state.apiKey,
   };
+  if (isBaseUrlRequired(state.provider, providers) && state.baseURL.trim() !== "") {
+    out.baseURL = state.baseURL.trim();
+  }
+  return out;
 }

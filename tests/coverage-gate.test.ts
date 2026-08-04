@@ -68,6 +68,7 @@ const STUB_ALLOWLIST = {
     "openai", "deepseek", "deepseek-cn", "fireworks", "nvidia-nim", "novita",
     "openrouter", "sglang", "vllm", "groq", "together", "cerebras",
     "deepinfra", "perplexity", "mistral", "xai", "cohere", "vercel-gateway",
+    "minimax",
     "anthropic", "bedrock", "vertex", "azure-foundry",
     "google", "vertex-google",
     "ollama", "custom",

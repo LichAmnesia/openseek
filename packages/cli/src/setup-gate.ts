@@ -4,7 +4,11 @@
 // test suite can drive the decision without spinning up the TUI renderer.
 //
 // Rule:
-//   first-run  := provider requires an api key AND config.source.apiKey === "default"
+//   first-run  := (provider requires an api key AND config.source.apiKey === "default")
+//                 OR (provider requires a base URL AND none resolved) — a
+//                 requiresBaseURL provider (custom) without base_url would
+//                 dial its non-routable stub, so it's just as unusable as a
+//                 keyless mikan (G8.1/G8.4)
 //   eligible   := isTTY === true
 //                 AND args.prompt === undefined          (not one-shot)
 //                 AND args.subcommand !== "serve"        (not the API server)
@@ -13,10 +17,10 @@
 
 import { getProvider, type ResolvedConfig } from "@openseek/provider";
 import type { ParsedArgv } from "./argv.ts";
-import { providerRequiresApiKey } from "./provider-auth.ts";
+import { providerRequiresApiKey, providerRequiresBaseURL } from "./provider-auth.ts";
 
 export interface SetupGateInput {
-  config: Pick<ResolvedConfig, "provider" | "source">;
+  config: Pick<ResolvedConfig, "provider" | "source" | "baseURL">;
   args: Pick<ParsedArgv, "prompt" | "subcommand" | "noSetup" | "version" | "help">;
   isTTY: boolean;
 }
@@ -28,6 +32,9 @@ export function shouldRunSetup(input: SetupGateInput): boolean {
   if (input.args.prompt !== undefined) return false;
   if (!input.isTTY) return false;
   const provider = getProvider(input.config.provider);
+  if (provider && providerRequiresBaseURL(provider) && input.config.baseURL === undefined) {
+    return true;
+  }
   if (provider && !providerRequiresApiKey(provider)) return false;
   return input.config.source.apiKey === "default";
 }

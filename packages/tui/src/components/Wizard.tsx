@@ -22,6 +22,7 @@ import {
 } from "./wizard-logic.ts";
 import {
   ApiKeyStep,
+  BaseUrlStep,
   ModelStep,
   ProviderStep,
 } from "./wizard-steps.tsx";
@@ -34,6 +35,7 @@ export interface WizardProps {
     provider?: string;
     model?: string;
     apiKey?: string;
+    baseURL?: string;
   };
   /** Available providers to pick from — caller passes the full registry. */
   providers: WizardProviderInfo[];
@@ -60,6 +62,7 @@ export function Wizard(props: WizardProps): JSX.Element {
     initialWizardState({
       step: props.initialStep ?? "provider",
       provider: seedProvider,
+      baseURL: props.initial?.baseURL ?? "",
       apiKey: props.initial?.apiKey ?? "",
       model: props.initial?.model ?? "",
     }),
@@ -78,7 +81,7 @@ export function Wizard(props: WizardProps): JSX.Element {
       const next = advanceStep(s, props.providers);
       if (next.step === "done" && s.step !== "done") {
         // Defer so the render commits before the caller tears the renderer down.
-        queueMicrotask(() => props.onComplete(toResult(next)));
+        queueMicrotask(() => props.onComplete(toResult(next, props.providers)));
       }
       return next;
     });
@@ -93,6 +96,13 @@ export function Wizard(props: WizardProps): JSX.Element {
             providers={props.providers}
             value={() => state().provider}
             onChange={(id) => setState((s) => ({ ...s, provider: id }))}
+            onSubmit={advance}
+          />
+        </Show>
+        <Show when={state().step === "baseUrl"}>
+          <BaseUrlStep
+            value={() => state().baseURL}
+            onChange={(v) => setState((s) => ({ ...s, baseURL: v }))}
             onSubmit={advance}
           />
         </Show>
@@ -126,23 +136,27 @@ function providerById(
 }
 
 function Header(props: { step: () => string }): JSX.Element {
-  const stepNum = createMemo(() => {
+  // The baseUrl step only exists for requiresBaseURL providers (custom), so
+  // steps are labeled by name instead of a fixed N/3 count.
+  const label = createMemo(() => {
     switch (props.step()) {
       case "provider":
-        return 1;
+        return "provider";
+      case "baseUrl":
+        return "base URL";
       case "apiKey":
-        return 2;
+        return "API key";
       case "model":
-        return 3;
+        return "model";
       default:
-        return 3;
+        return "done";
     }
   });
   return (
     <box flexDirection="column">
-      <text fg={defaultTheme.splash}>{`OpenSeek setup — step ${stepNum()}/3`}</text>
+      <text fg={defaultTheme.splash}>{`OpenSeek setup — ${label()}`}</text>
       <text fg={defaultTheme.dim}>
-        Pick provider, paste API key, choose model. Settings save to ~/.openseek/config.toml.
+        Pick provider, set endpoint/key, choose model. Settings save to ~/.openseek/config.toml.
       </text>
     </box>
   );

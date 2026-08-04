@@ -11,7 +11,7 @@ import type { WizardProviderInfo, WizardResult, WizardStep } from "./wizard-logi
 
 export interface RunWizardOpts {
   providers: WizardProviderInfo[];
-  initial?: { provider?: string; model?: string; apiKey?: string };
+  initial?: { provider?: string; model?: string; apiKey?: string; baseURL?: string };
   /**
    * Which step to start at. Defaults to "provider" for the full first-run
    * flow. Phase 3 runtime-switch passes "model" or "provider" to skip

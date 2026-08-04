@@ -42,10 +42,29 @@ test("read errors on missing file", async () => {
   expect(result.message).toContain("file not found");
 });
 
-test("read rejects path escaping cwd", async () => {
-  await expect(read.call({ path: "../escape.txt" }, makeCtx(cwd))).rejects.toThrow(
-    /escapes workspace/,
-  );
+// G8.7: read is a read-only tool — absolute / escaping paths are allowed
+// (bash is unrestricted anyway, and one-shot runs reference task files by
+// absolute path). Mutating tools keep the workspace fence — see write.test.ts.
+test("read allows absolute path outside the workspace", async () => {
+  const outside = makeTmpDir("openseek-read-outside-");
+  try {
+    await Bun.write(join(outside, "task.md"), "outside-secret\n");
+    const result = await read.call({ path: join(outside, "task.md") }, makeCtx(cwd));
+    expect(result.kind).toBe("text");
+    if (result.kind !== "text") throw new Error("unreachable");
+    expect(result.text).toContain("outside-secret");
+    // Header shows the absolute path since it's not under cwd.
+    expect(result.text).toContain(join(outside, "task.md"));
+  } finally {
+    cleanupTmpDir(outside);
+  }
+});
+
+test("read allows relative path escaping cwd (missing file → clean error)", async () => {
+  const result = await read.call({ path: "../no-such-escape-file.txt" }, makeCtx(cwd));
+  expect(result.kind).toBe("error");
+  if (result.kind !== "error") throw new Error("unreachable");
+  expect(result.message).toContain("file not found");
 });
 
 test("read flattens .ipynb cells", async () => {

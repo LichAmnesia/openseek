@@ -13,7 +13,15 @@ const inputSchema = z.object({
     .int()
     .positive()
     .optional()
-    .describe("Hard wall-clock timeout in ms (default 60_000)."),
+    .describe("Hard wall-clock timeout in ms (default 600_000 = 10min)."),
+  maxSteps: z
+    .number()
+    .int()
+    .positive()
+    .optional()
+    .describe(
+      "Max agent tool-steps the sub-agent may take (default 40). Raise for delegated multi-file work (e.g. writing many files); a single lookup can pass a low value.",
+    ),
 });
 
 type AgentSpawnInput = z.infer<typeof inputSchema>;
@@ -43,6 +51,14 @@ export function setAgentSpawnDeps(deps: AgentSpawnDeps | undefined): void {
   injectedDeps = deps;
 }
 
+/**
+ * Read-only access for sibling tools that need a one-off LLM call (e.g.
+ * web_fetch prompt-mode extraction). Undefined until the host wires deps.
+ */
+export function getAgentSpawnDeps(): AgentSpawnDeps | undefined {
+  return injectedDeps;
+}
+
 const agentSpawn: Tool<typeof inputSchema> = {
   name: "agent_spawn",
   description:
@@ -59,7 +75,10 @@ const agentSpawn: Tool<typeof inputSchema> = {
     }
     const { spawnAgent } = await import("@openseek/agent");
     const deps = input.model ? { ...injectedDeps, model: input.model } : injectedDeps;
-    const handle = spawnAgent({ prompt: input.prompt, timeoutMs: input.timeoutMs }, deps);
+    const handle = spawnAgent(
+      { prompt: input.prompt, timeoutMs: input.timeoutMs, maxSteps: input.maxSteps },
+      deps,
+    );
 
     // Bind parent's abort to the child's abort: if the parent turn cancels,
     // the child must cancel cooperatively.

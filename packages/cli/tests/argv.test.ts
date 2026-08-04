@@ -47,9 +47,44 @@ test("flag after positional does not overwrite", () => {
   expect(r.provider).toBe("mikan-cloud");
 });
 
+test("format defaults to text", () => {
+  expect(parseArgv([]).format).toBe("text");
+  expect(parseArgv(["-p", "hi"]).format).toBe("text");
+});
+
+test("--format json sets json format", () => {
+  expect(parseArgv(["-p", "hi", "--format", "json"]).format).toBe("json");
+});
+
+test("--format text is honored", () => {
+  expect(parseArgv(["-p", "hi", "--format", "text"]).format).toBe("text");
+});
+
+test("--json is shorthand for --format json", () => {
+  expect(parseArgv(["-p", "hi", "--json"]).format).toBe("json");
+});
+
+test("--format with unknown value falls back to text", () => {
+  expect(parseArgv(["-p", "hi", "--format", "xml"]).format).toBe("text");
+});
+
 test("HELP_TEXT mentions key concepts", () => {
   expect(HELP_TEXT).toContain("OpenSeek");
   expect(HELP_TEXT).toContain("--provider");
   expect(HELP_TEXT).toContain("OPENSEEK_API_KEY");
   expect(HELP_TEXT).toContain("config.toml");
+});
+
+test("--max-steps parses a positive integer", () => {
+  expect(parseArgv(["-p", "hi", "--max-steps", "200"]).maxSteps).toBe(200);
+});
+
+test("--max-steps rejects non-positive / non-integer values", () => {
+  expect(parseArgv(["-p", "hi", "--max-steps", "0"]).maxSteps).toBeUndefined();
+  expect(parseArgv(["-p", "hi", "--max-steps", "abc"]).maxSteps).toBeUndefined();
+  expect(parseArgv(["-p", "hi", "--max-steps", "1.5"]).maxSteps).toBeUndefined();
+});
+
+test("--max-steps absent → undefined (one-shot default applied downstream)", () => {
+  expect(parseArgv(["-p", "hi"]).maxSteps).toBeUndefined();
 });

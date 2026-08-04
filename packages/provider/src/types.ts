@@ -62,6 +62,12 @@ export interface LLMProvider {
    * configured. Local/self-host providers can set this false.
    */
   requiresApiKey?: boolean;
+  /**
+   * Whether the provider is unusable without an explicit baseURL from
+   * config/env (its built-in default is a non-routable stub). The CLI
+   * fail-fasts before making a request instead of dialing the stub.
+   */
+  requiresBaseURL?: boolean;
   /** Default model id when the user does not specify one. */
   defaultModel: string;
   /** Build a ready-to-use ai-SDK `LanguageModel` client for `modelId`. */

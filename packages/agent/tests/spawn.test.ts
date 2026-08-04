@@ -182,3 +182,68 @@ test("spawnAgent attaches the original prompt as a user message (output reflects
   expect(res.output).toBe("only child speaks");
   expect(parentMessages.length).toBe(0);
 });
+
+// ---------- sub-agent step budget (regression: was hard-capped at 12) ----------
+
+import { z } from "zod";
+import { toolCallChunks } from "../../session/src/mock-provider.ts";
+
+// A no-op auto-permission tool the mock model can "call" every step so the
+// session keeps looping until its step budget (stepCountIs) stops it. callCount
+// then equals the number of steps the child was actually allowed to take.
+function noopToolMap() {
+  const noop = {
+    name: "noop",
+    description: "no-op",
+    inputSchema: z.object({}),
+    permission: "auto" as const,
+    async call() {
+      return { kind: "text" as const, text: "ok" };
+    },
+  };
+  // biome-ignore lint/suspicious/noExplicitAny: minimal structural tool for the mock loop.
+  return new Map<string, any>([["noop", noop]]);
+}
+
+function loopingModel(phaseCount: number) {
+  return createMockModel({
+    phases: Array.from({ length: phaseCount }, () => ({
+      chunks: toolCallChunks("noop", {}),
+    })),
+  });
+}
+
+test("spawned sub-agent gets the raised default step budget (>12, was capped at 12)", async () => {
+  const handle = loopingModel(60); // more phases than any cap so the budget is the limit
+  const child = spawnAgent(
+    { prompt: "do lots of steps" },
+    {
+      provider: provider(handle.model),
+      model: "mock-model",
+      capability: capability(),
+      tools: noopToolMap(),
+    },
+  );
+  await child.result;
+  // Regression guard: the old default was 12. The new default (40) must let a
+  // delegated sub-agent take well more than 12 tool-steps.
+  expect(handle.callCount()).toBeGreaterThan(12);
+  expect(handle.callCount()).toBeLessThanOrEqual(41);
+});
+
+test("spawned sub-agent honors an explicit maxSteps override", async () => {
+  const handle = loopingModel(60);
+  const child = spawnAgent(
+    { prompt: "just a couple steps", maxSteps: 3 },
+    {
+      provider: provider(handle.model),
+      model: "mock-model",
+      capability: capability(),
+      tools: noopToolMap(),
+    },
+  );
+  await child.result;
+  // Caller-supplied cap wins; a cheap one-off lookup stays cheap.
+  expect(handle.callCount()).toBeLessThanOrEqual(4);
+  expect(handle.callCount()).toBeGreaterThanOrEqual(2);
+});

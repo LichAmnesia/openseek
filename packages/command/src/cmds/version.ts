@@ -1,6 +1,8 @@
 import type { Command, CommandResult } from "../types.ts";
 
-const VERSION = "0.4.0-alpha";
+import rootPkg from "../../../../package.json" with { type: "json" };
+
+const VERSION: string = (rootPkg as { version: string }).version;
 
 const version: Command = {
   name: "version",

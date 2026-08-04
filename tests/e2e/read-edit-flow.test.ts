@@ -98,19 +98,43 @@ describe("e2e: read+edit flow", () => {
     }
   });
 
-  test("read denies a path that escapes cwd (workspace boundary)", async () => {
-    const res = await runHarness({
-      prompt: "escape",
+  // G8.7: read is read-only, so paths outside the workspace are allowed
+  // (one-shot runs reference task files by absolute path). The workspace
+  // fence stays on mutating tools — assert edit still refuses to escape.
+  test("read allows a path outside cwd; edit still denies escape", async () => {
+    const readRes = await runHarness({
+      prompt: "escape-read",
       phases: [
-        { chunks: toolCallChunks("read", { path: "/etc/passwd" }, "c5") },
-        { chunks: textChunks("blocked") },
+        { chunks: toolCallChunks("read", { path: "/etc/hosts" }, "c5") },
+        { chunks: textChunks("ok") },
       ],
       tools: new Map([["read", readTool]]),
       cwd: dir,
     });
-    const tr = res.events.find((e) => e.type === "tool-result");
-    if (tr && tr.type === "tool-result") {
-      expect(tr.result.result.kind).toBe("error");
+    const readTr = readRes.events.find((e) => e.type === "tool-result");
+    expect(readTr).toBeDefined();
+    if (readTr && readTr.type === "tool-result") {
+      expect(readTr.result.result.kind).toBe("text");
+    }
+
+    const editRes = await runHarness({
+      prompt: "escape-edit",
+      phases: [
+        {
+          chunks: toolCallChunks(
+            "edit",
+            { path: "/etc/hosts", old_string: "localhost", new_string: "pwned" },
+            "c6",
+          ),
+        },
+        { chunks: textChunks("blocked") },
+      ],
+      tools: new Map([["edit", editTool]]),
+      cwd: dir,
+    });
+    const editTr = editRes.events.find((e) => e.type === "tool-result");
+    if (editTr && editTr.type === "tool-result") {
+      expect(editTr.result.result.kind).toBe("error");
     }
   });
 });

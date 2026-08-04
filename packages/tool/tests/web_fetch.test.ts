@@ -110,3 +110,47 @@ test("web_fetch reports network failures", async () => {
   if (result.kind !== "error") throw new Error("unreachable");
   expect(result.message).toContain("fetch failed");
 });
+
+// ---------- G9: head+tail truncation + prompt-mode extraction ----------
+
+import { headTailTruncate } from "../src/tools/web_fetch.ts";
+import { setAgentSpawnDeps } from "../src/tools/agent_spawn.ts";
+
+test("headTailTruncate keeps both ends with a middle marker", () => {
+  const s = `${"A".repeat(500)}${"M".repeat(500)}${"Z".repeat(500)}`;
+  const out = headTailTruncate(s, 600);
+  expect(out.startsWith("A".repeat(300))).toBe(true);
+  expect(out.endsWith("Z".repeat(300))).toBe(true);
+  expect(out).toContain("chars omitted from the middle");
+  expect(out).not.toContain("M".repeat(400));
+});
+
+test("headTailTruncate is identity under the cap", () => {
+  expect(headTailTruncate("short", 600)).toBe("short");
+});
+
+test("web_fetch raw mode truncates head+tail at maxBytes", async () => {
+  const big = `<html><body><p>${"start ".repeat(400)}</p><p>${"middle ".repeat(2000)}</p><p>${"end ".repeat(400)}</p></body></html>`;
+  mockHtml(big);
+  const result = await webFetch.call(
+    { url: "https://example.test/big", maxBytes: 2048 },
+    makeCtx(cwd),
+  );
+  if (result.kind !== "text") throw new Error("unreachable");
+  expect(result.text).toContain("start start");
+  expect(result.text).toContain("end end");
+  expect(result.text).toContain("chars omitted from the middle");
+});
+
+test("web_fetch prompt mode falls back to raw when agent deps unwired", async () => {
+  setAgentSpawnDeps(undefined);
+  mockHtml("<html><body><p>fallback body content</p></body></html>");
+  const result = await webFetch.call(
+    { url: "https://example.test/prompt", prompt: "what is the price?" },
+    makeCtx(cwd),
+  );
+  if (result.kind !== "text") throw new Error("unreachable");
+  // No sub-model available → raw mode output, not extraction.
+  expect(result.text).toContain("fallback body content");
+  expect(result.text).not.toContain("extracted (prompt mode)");
+});

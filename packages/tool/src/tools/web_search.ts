@@ -78,44 +78,116 @@ export function parseDuckLite(html: string, limit: number): SearchResult[] {
   return results;
 }
 
+// ---------- Tavily backend (default when TAVILY_API_KEY is set) ----------
+//
+// DuckDuckGo Lite is keyless but thin: fresh product pages routinely return
+// zero hits, which pushes the agent into blind web_fetch loops (observed
+// 2026-07-15 — 17 searches, most empty, then 29 raw fetches). Tavily is a
+// purpose-built LLM search API with much better recall; DDG stays as the
+// keyless fallback.
+
+const TAVILY_ENDPOINT = "https://api.tavily.com/search";
+
+interface TavilyResponse {
+  results?: Array<{ url?: string; title?: string; content?: string }>;
+}
+
+async function searchTavily(
+  query: string,
+  limit: number,
+  apiKey: string,
+  fetchFn: typeof fetch,
+  signal: AbortSignal,
+): Promise<SearchResult[]> {
+  const res = await fetchFn(TAVILY_ENDPOINT, {
+    method: "POST",
+    signal,
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      query,
+      max_results: limit,
+      search_depth: "basic",
+      include_answer: false,
+    }),
+  });
+  if (!res.ok) {
+    throw new Error(`tavily HTTP ${res.status} ${res.statusText}`);
+  }
+  const data = (await res.json()) as TavilyResponse;
+  return (data.results ?? []).slice(0, limit).map((r) => ({
+    url: r.url ?? "",
+    title: r.title ?? "",
+    // Tavily "content" is an extracted passage; cap it to snippet size so
+    // one search can't flood the conversation.
+    snippet: (r.content ?? "").slice(0, 500),
+  }));
+}
+
+async function searchDuckLite(
+  query: string,
+  limit: number,
+  fetchFn: typeof fetch,
+  signal: AbortSignal,
+): Promise<SearchResult[]> {
+  const url = `${ENDPOINT}?q=${encodeURIComponent(query)}`;
+  const res = await fetchFn(url, {
+    signal,
+    headers: {
+      "user-agent": "Mozilla/5.0 (compatible; openseek/0.0; +https://openseek)",
+    },
+  });
+  if (!res.ok) {
+    throw new Error(`duckduckgo HTTP ${res.status} ${res.statusText}`);
+  }
+  return parseDuckLite(await res.text(), limit);
+}
+
 const webSearch: Tool<typeof inputSchema> = {
   name: "web_search",
   description:
-    "Search the public web via DuckDuckGo lite. Returns up to `limit` results (default 5) with title / url / snippet.",
+    "Search the public web (Tavily when TAVILY_API_KEY is set, DuckDuckGo lite otherwise). Returns up to `limit` results (default 5) with title / url / snippet.",
   inputSchema,
   permission: "auto",
   async call(input: WebSearchInput, ctx): Promise<ToolResult> {
     const limit = input.limit ?? DEFAULT_LIMIT;
     const fetchFn = injectedFetch ?? fetch;
-    const url = `${ENDPOINT}?q=${encodeURIComponent(input.query)}`;
-    let res: Response;
+    const tavilyKey = process.env.TAVILY_API_KEY?.trim();
+
+    let hits: SearchResult[];
+    let backend: string;
     try {
-      res = await fetchFn(url, {
-        signal: ctx.abort,
-        headers: {
-          "user-agent":
-            "Mozilla/5.0 (compatible; openseek/0.0; +https://openseek)",
-        },
-      });
+      if (tavilyKey) {
+        backend = "tavily";
+        try {
+          hits = await searchTavily(input.query, limit, tavilyKey, fetchFn, ctx.abort);
+        } catch (err) {
+          // Tavily down / quota exceeded → degrade to keyless DDG rather
+          // than failing the tool call outright.
+          ctx.log.warn(
+            `web_search tavily failed (${err instanceof Error ? err.message : String(err)}) — falling back to duckduckgo`,
+          );
+          backend = "duckduckgo (tavily fallback)";
+          hits = await searchDuckLite(input.query, limit, fetchFn, ctx.abort);
+        }
+      } else {
+        backend = "duckduckgo";
+        hits = await searchDuckLite(input.query, limit, fetchFn, ctx.abort);
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      return { kind: "error", message: `web_search fetch failed: ${msg}` };
+      return { kind: "error", message: `web_search failed: ${msg}` };
     }
-    if (!res.ok) {
-      return {
-        kind: "error",
-        message: `web_search HTTP ${res.status} ${res.statusText}`,
-      };
-    }
-    const html = await res.text();
-    const hits = parseDuckLite(html, limit);
+
     if (hits.length === 0) {
       return {
         kind: "text",
-        text: `# query: ${input.query}\n\n_no results_`,
+        text: `# query: ${input.query}\n# backend: ${backend}\n\n_no results_`,
       };
     }
-    const lines: string[] = [`# query: ${input.query}`, ""];
+    const lines: string[] = [`# query: ${input.query}`, `# backend: ${backend}`, ""];
     hits.forEach((h, i) => {
       lines.push(`${i + 1}. ${h.title || h.url}`);
       lines.push(`   ${h.url}`);

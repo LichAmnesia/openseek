@@ -1,13 +1,13 @@
 import { readFileSync } from "node:fs";
 import { z } from "zod";
 import type { Tool, ToolResult } from "../types.ts";
-import { resolveWithinCwd } from "../workspace.ts";
+import { resolveReadable } from "../workspace.ts";
 
 const DEFAULT_LIMIT = 2000;
 const MAX_LINE_LENGTH = 2000;
 
 const inputSchema = z.object({
-  path: z.string().min(1).describe("Path to read (relative to cwd or absolute within cwd)"),
+  path: z.string().min(1).describe("Path to read (relative to cwd, or any absolute path)"),
   offset: z.number().int().min(0).optional().describe("Line offset (0-based)"),
   limit: z
     .number()
@@ -44,7 +44,7 @@ const read: Tool<typeof inputSchema> = {
   inputSchema,
   permission: "auto",
   async call(input: ReadInput, ctx): Promise<ToolResult> {
-    const { abs, relToCwd } = resolveWithinCwd(ctx.cwd, input.path);
+    const { abs, relToCwd } = resolveReadable(ctx.cwd, input.path);
     const file = Bun.file(abs);
     if (!(await file.exists())) {
       return { kind: "error", message: `file not found: ${relToCwd}` };

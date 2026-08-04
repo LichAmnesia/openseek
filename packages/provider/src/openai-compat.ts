@@ -19,6 +19,8 @@ export interface OpenAICompatFactoryOpts {
   defaultModel: string;
   /** False for local/self-host endpoints that accept unauthenticated calls. */
   requiresApiKey?: boolean;
+  /** True when the built-in baseURL is a stub and config/env must supply one. */
+  requiresBaseURL?: boolean;
   /** Whether assistant tool_call messages must replay reasoning_content. */
   requiresReasoningReplay: boolean;
   /** Capability defaults. Optional fields fall back to safe defaults. */
@@ -65,6 +67,7 @@ export function createOpenAICompatProvider(opts: OpenAICompatFactoryOpts): LLMPr
     id: opts.id,
     protocol: "openai-compat",
     requiresApiKey: opts.requiresApiKey ?? true,
+    requiresBaseURL: opts.requiresBaseURL ?? false,
     defaultModel: opts.defaultModel,
     availableModels: opts.availableModels,
     createClient(modelId, providerOpts: ProviderOpts): LanguageModel {

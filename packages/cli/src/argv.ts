@@ -3,6 +3,13 @@
 export interface ParsedArgv {
   /** One-shot prompt (-p flag). When set, run a single turn and exit. */
   prompt?: string;
+  /**
+   * One-shot output format (`--format`, alias `--json`). "text" (default)
+   * streams human-readable output to stdout; "json" emits one NDJSON event
+   * per line so headless callers (e.g. the HiveDesk daemon) can parse the
+   * stream deterministically. Only affects one-shot (`-p`) runs.
+   */
+  format: "text" | "json";
   /** --provider override. */
   provider?: string;
   /** --model override. */
@@ -25,10 +32,17 @@ export interface ParsedArgv {
   host?: string;
   /** Skip the first-run wizard (debug / scripted runs). */
   noSetup: boolean;
+  /**
+   * Max agent tool-steps for a one-shot run (`--max-steps`). One-shot runs
+   * default higher than the interactive session cap (12) because a `-p`
+   * task must finish in a single invocation — long workflows routinely
+   * need dozens of tool calls.
+   */
+  maxSteps?: number;
 }
 
 export function parseArgv(argv: string[]): ParsedArgv {
-  const out: ParsedArgv = { version: false, help: false, serveHttp: false, noSetup: false };
+  const out: ParsedArgv = { version: false, help: false, serveHttp: false, noSetup: false, format: "text" };
   let i = 0;
   const head = argv[0];
   if (head === "serve" || head === "setup" || head === "model" || head === "doctor") {
@@ -62,6 +76,19 @@ export function parseArgv(argv: string[]): ParsedArgv {
     } else if (a === "--model") {
       out.model = argv[i + 1];
       i++;
+    } else if (a === "--max-steps") {
+      const next = argv[i + 1];
+      if (next !== undefined) {
+        const n = Number(next);
+        if (Number.isInteger(n) && n > 0) out.maxSteps = n;
+      }
+      i++;
+    } else if (a === "--format") {
+      const next = argv[i + 1];
+      if (next === "json" || next === "text") out.format = next;
+      i++;
+    } else if (a === "--json") {
+      out.format = "json";
     } else if (!a.startsWith("-") && out.prompt === undefined && out.subcommand === undefined) {
       // Trailing positional treated as one-shot prompt.
       out.prompt = a;
@@ -88,6 +115,9 @@ Options:
   --port <n>         (with serve) listen port (default: 7117)
   --host <h>         (with serve) bind host (default: 127.0.0.1)
   -p, --prompt       One-shot prompt
+  --format <fmt>     (one-shot) output format: text (default) | json (NDJSON)
+  --json             (one-shot) shorthand for --format json
+  --max-steps <n>    (one-shot) max agent tool-steps (default: 100)
   --no-setup         Skip the first-run onboarding wizard
   -v, --version      Print version
   -h, --help         Print this help
@@ -105,6 +135,13 @@ Configure (precedence: env > project > user > default):
   3. user      ~/.openseek/config.toml
   4. default   built-in fallbacks
   Run 'openseek doctor' to see where each value resolved from.
+
+Custom / self-hosted LLM (any OpenAI-compat server — llama-server, LM Studio, …):
+  ~/.openseek/config.toml:
+    provider = "custom"
+    model    = "<model-id>"            # e.g. qwen3.6-35b-a3b
+    base_url = "http://host:8080/v1"   # required for provider "custom"
+    api_key  = "..."                   # optional — most local servers skip auth
 
 Docs:
   https://github.com/LichAmnesia/openseek
