@@ -21,7 +21,8 @@
     "dist",
     "LICENSE",
     "README.md",
-    "README.zh.md"
+    "README.zh.md",
+    "README-zh.md"
   ],
   "scripts": {
     "dev": "bun run packages/cli/src/index.ts",
